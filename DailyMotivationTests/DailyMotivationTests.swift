@@ -8,10 +8,14 @@
 import Testing
 @testable import DailyMotivation
 
+/// Unit tests for the DailyMotivation app.
 struct DailyMotivationTests {
 
     @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+        // TODO: Add tests for QuoteLoader, FavoritesManager, and QuoteViewModel.
+        // Example:
+        // let quotes = QuoteLoader.loadQuotes()
+        // #expect(!quotes.isEmpty)
     }
 
 }
