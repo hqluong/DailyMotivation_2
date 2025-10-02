@@ -60,7 +60,9 @@ struct FavoritesView: View {
     previewFavManager.addFavorite(quote: previewQuote1)
     previewFavManager.addFavorite(quote: previewQuote2)
 
-    let previewViewModel = QuoteViewModel(favoritesManager: previewFavManager)
+    let previewTracker = EngagementTracker(userDefaults: UserDefaults(suiteName: "preview.engagement") ?? .standard)
+    previewTracker.resetAll()
+    let previewViewModel = QuoteViewModel(favoritesManager: previewFavManager, engagementTracker: previewTracker)
     // Manually add the quotes to the ViewModel's list for the preview
     previewViewModel.allQuotes = [previewQuote1, previewQuote2, Quote(quote: "Non-fav", author: "Author 3")]
 

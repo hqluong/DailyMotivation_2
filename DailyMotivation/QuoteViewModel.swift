@@ -17,12 +17,13 @@ class QuoteViewModel: ObservableObject {
     @Published var currentQuote: Quote? = nil
     @Published var errorMessage: String? = nil // To show errors to the user
     
-    // Keep a reference to the favorites manager
-    // Note: Injected dependency - better for testing and flexibility
+    // Keep references to managers so we can coordinate favorites and engagement tracking
     private var favoritesManager: FavoritesManager
+    private var engagementTracker: EngagementTracker
     
-    init(favoritesManager: FavoritesManager) {
+    init(favoritesManager: FavoritesManager, engagementTracker: EngagementTracker) {
         self.favoritesManager = favoritesManager
+        self.engagementTracker = engagementTracker
         loadQuotes()
         setCurrentQuoteToDaily()
     }
@@ -78,16 +79,25 @@ class QuoteViewModel: ObservableObject {
     // Convenience method to toggle the favorite status of the *current* quote
     func toggleCurrentQuoteFavorite() {
         guard let quote = currentQuote else { return }
-        favoritesManager.toggleFavorite(quote: quote)
+        let isNowFavorite = favoritesManager.toggleFavorite(quote: quote)
+        if isNowFavorite {
+            engagementTracker.logQuoteFavorited()
+        }
         // The FavoritesManager will publish its changes, and views observing it will update.
     }
-    
+
     /// Returns the full list of favorite quotes.
     func getFavoriteQuotes() -> [Quote] {
         return favoritesManager.getFavoriteQuotes(from: allQuotes)
     }
     // Inside QuoteViewModel.swift class
     
+    /// Records that today's quote was viewed so engagement streaks stay updated.
+    func recordDailyQuoteView() {
+        guard currentQuote != nil else { return }
+        engagementTracker.logQuoteViewed()
+    }
+
     /// Returns the daily quote based on the day of the year.
     func getDailyQuote() -> Quote? {
         guard !allQuotes.isEmpty else { return nil }

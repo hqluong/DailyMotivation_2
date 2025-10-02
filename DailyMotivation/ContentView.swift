@@ -6,6 +6,7 @@ import UserNotifications // <-- Import UserNotifications
 struct ContentView: View {
     // StateObjects for ViewModel and FavoritesManager
     @StateObject private var favoritesManager: FavoritesManager
+    @StateObject private var engagementTracker: EngagementTracker
     @StateObject private var viewModel: QuoteViewModel
 
     // State for navigation, sheets, notification time, and category selection
@@ -28,8 +29,10 @@ struct ContentView: View {
     // Initializer to inject FavoritesManager
     init() {
         let favManager = FavoritesManager()
+        let tracker = EngagementTracker()
         _favoritesManager = StateObject(wrappedValue: favManager)
-        _viewModel = StateObject(wrappedValue: QuoteViewModel(favoritesManager: favManager))
+        _engagementTracker = StateObject(wrappedValue: tracker)
+        _viewModel = StateObject(wrappedValue: QuoteViewModel(favoritesManager: favManager, engagementTracker: tracker))
     }
 
     var body: some View {
@@ -52,6 +55,17 @@ struct ContentView: View {
 
                     // --- Category Picker ---
                     VStack(spacing: 20) {
+                        StreakHeaderView(summary: engagementTracker.summary) {
+                            if let dailyQuote = viewModel.getDailyQuote() {
+                                NotificationManager.shared.scheduleDailyQuoteNotification(
+                                    quote: dailyQuote,
+                                    hour: dailyReminderHour,
+                                    minute: dailyReminderMinute
+                                )
+                            }
+                            showingSettings = true
+                        }
+
                         Picker("Category", selection: $selectedCategory) {
                             ForEach(categories, id: \.self) { category in
                                 Text(category).tag(category)
@@ -215,6 +229,9 @@ struct ContentView: View {
                     viewModel.setCurrentQuoteToDaily()
                 }
 
+                // Record that the user viewed today's quote for streak tracking
+                viewModel.recordDailyQuoteView()
+
                 // --- Request and Schedule Notifications ---
                 UNUserNotificationCenter.current().getNotificationSettings { settings in
                     switch settings.authorizationStatus {
@@ -249,6 +266,129 @@ struct ContentView: View {
         } // End NavigationStack
     } // End body
 } // End ContentView struct
+
+// MARK: - Streak UI
+struct StreakHeaderView: View {
+    let summary: EngagementTracker.StreakSummary
+    let onReminderAction: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("\(summary.currentStreak)-day streak", systemImage: summary.currentStreak > 0 ? "flame.fill" : "flame")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Spacer()
+                Text("Best \(summary.bestStreak)")
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.8))
+            }
+
+            StreakHistoryRow(history: summary.recentHistory)
+
+            if let lastViewed = summary.lastViewed {
+                Text("Last read \(lastViewed, format: .relative(presentation: .numeric))")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.75))
+            } else {
+                Text("Read today's quote to start your streak!")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.75))
+            }
+
+            if summary.needsReminderNudge, summary.lastViewed != nil {
+                Button(action: onReminderAction) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "bell.badge.fill")
+                        Text("Need an extra nudge? Tune your reminder")
+                    }
+                    .font(.caption.bold())
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 12)
+                    .background(Color.white.opacity(0.15))
+                    .foregroundColor(.white)
+                    .clipShape(Capsule())
+                }
+            }
+        }
+        .padding()
+        .background(Color.black.opacity(0.25))
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+        )
+        .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("You are on a \(summary.currentStreak) day streak. Best streak \(summary.bestStreak).")
+    }
+}
+
+struct StreakHistoryRow: View {
+    let history: [EngagementTracker.DailyEngagement]
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(history) { day in
+                    VStack(spacing: 4) {
+                        ZStack {
+                            Circle()
+                                .fill(color(for: day))
+                                .frame(width: 14, height: 14)
+
+                            if day.favorited && day.viewed {
+                                Image(systemName: "star.fill")
+                                    .font(.system(size: 8))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        Text(dayLabel(for: day.date))
+                            .font(.caption2)
+                            .foregroundColor(.white.opacity(0.7))
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(historyAccessibility(for: day))
+                }
+            }
+        }
+    }
+
+    private func color(for day: EngagementTracker.DailyEngagement) -> Color {
+        if day.viewed && day.favorited {
+            return Color.orange
+        } else if day.viewed {
+            return Color.green
+        } else {
+            return Color.white.opacity(0.25)
+        }
+    }
+
+    private func dayLabel(for date: Date) -> String {
+        date.formatted(.dateTime.weekday(.narrow))
+    }
+
+    private func historyAccessibility(for day: EngagementTracker.DailyEngagement) -> String {
+        let weekday = StreakHistoryRow.accessibilityFormatter.string(from: day.date)
+        switch (day.viewed, day.favorited) {
+        case (true, true):
+            return "\(weekday): viewed and favorited"
+        case (true, false):
+            return "\(weekday): viewed"
+        case (false, true):
+            return "\(weekday): favorited"
+        default:
+            return "\(weekday): no activity"
+        }
+    }
+
+    private static let accessibilityFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.setLocalizedDateFormatFromTemplate("EEEE")
+        return formatter
+    }()
+}
 
 // MARK: - SettingsView
 struct SettingsView: View {
