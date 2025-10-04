@@ -13,9 +13,15 @@ struct ContentView: View {
     @State private var showingFavorites = false
     @State private var isSharePresented = false
     @State private var showingSettings = false
+    @State private var showStreakPopup = false
+    @State private var hasPresentedStreakPopup = false
+    @State private var topSectionBounds: CGRect = .zero
     @AppStorage("dailyReminderHour") private var dailyReminderHour: Int = 9
     @AppStorage("dailyReminderMinute") private var dailyReminderMinute: Int = 0
     @AppStorage("selectedQuoteCategory") private var selectedCategory: String = "All"
+    @AppStorage("selectedThemeColorPack") private var selectedColorPackRawValue: String = ThemeColorPack.classic.rawValue
+    @AppStorage("selectedFontStyle") private var selectedFontStyleRawValue: String = QuoteFontStyle.rounded.rawValue
+    @AppStorage("selectedBackgroundStyle") private var selectedBackgroundStyleRawValue: String = QuoteBackgroundStyle.classic.rawValue
 
     // Example categories - update as needed
     private let categories: [String] = ["All", "Success", "Creativity", "Mindfulness", "Motivation", "Happiness"]
@@ -25,6 +31,9 @@ struct ContentView: View {
     private let maxQuoteFontSize: CGFloat = 44
     // Adjust this factor based on testing across screen sizes
     private let fontHeightScaleFactor: CGFloat = 0.09
+    private let streakPopupDisplayDuration: TimeInterval = 4.0
+    private let streakPopupTopOffset: CGFloat = 84
+    private let streakPopupMinimumTopSpacing: CGFloat = 56
 
     // Initializer to inject FavoritesManager
     init() {
@@ -36,15 +45,14 @@ struct ContentView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        let colorPack = ThemeColorPack(rawValue: selectedColorPackRawValue) ?? .classic
+        let fontStyle = QuoteFontStyle(rawValue: selectedFontStyleRawValue) ?? .rounded
+        let backgroundStyle = QuoteBackgroundStyle(rawValue: selectedBackgroundStyleRawValue) ?? .classic
+
+        return NavigationStack {
             ZStack {
-                // Background Gradient (Standard Syntax)
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .edgesIgnoringSafeArea(.all)
+                QuoteBackgroundView(style: backgroundStyle, colorPack: colorPack)
+                    .edgesIgnoringSafeArea(.all)
 
                 // Use GeometryReader for responsive sizing
                 GeometryReader { geometry in
@@ -52,140 +60,201 @@ struct ContentView: View {
                     let quoteAreaMaxHeight = geometry.size.height * 0.75 // Max height for the quote card
                     let calculatedQuoteFontSize = max(minQuoteFontSize, min(quoteAreaMaxHeight * fontHeightScaleFactor, maxQuoteFontSize))
                     let calculatedAuthorFontSize = max(minQuoteFontSize * 0.6, min(calculatedQuoteFontSize * 0.5, maxQuoteFontSize * 0.6))
+                    let containerOriginY = geometry.frame(in: .global).minY
+                    let measuredPopupY = topSectionBounds.isEmpty ? .zero : topSectionBounds.midY
+                    let baselinePopupY = geometry.safeAreaInsets.top + streakPopupMinimumTopSpacing
+                    let fallbackPopupY = geometry.safeAreaInsets.top + streakPopupTopOffset
+                    let popupVerticalAnchor = min(
+                        max(measuredPopupY == .zero ? fallbackPopupY : measuredPopupY, baselinePopupY),
+                        geometry.size.height * 0.45
+                    )
 
-                    // --- Category Picker ---
-                    VStack(spacing: 20) {
-                        StreakHeaderView(summary: engagementTracker.summary) {
-                            if let dailyQuote = viewModel.getDailyQuote() {
-                                NotificationManager.shared.scheduleDailyQuoteNotification(
-                                    quote: dailyQuote,
-                                    hour: dailyReminderHour,
-                                    minute: dailyReminderMinute
-                                )
-                            }
-                            showingSettings = true
-                        }
-
-                        Picker("Category", selection: $selectedCategory) {
-                            ForEach(categories, id: \.self) { category in
-                                Text(category).tag(category)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .padding(.horizontal)
-
-                        // --- Error Message Area ---
-                        if let errorMessage = viewModel.errorMessage {
-                             Text(errorMessage)
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.red.opacity(0.8))
-                                .cornerRadius(8)
-                                .frame(maxHeight: geometry.size.height * 0.1) // Limit error height
-                                .padding(.horizontal) // Add padding if needed
-                        }
-
-                        // --- Filtered Quote Area ---
-                        let filteredQuotes: [Quote] = {
-                            if selectedCategory == "All" {
-                                return viewModel.allQuotes
-                            } else {
-                                return viewModel.allQuotes.filter { $0.category == selectedCategory }
-                            }
-                        }()
-
-                        if let currentQuote = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
-                            // Quote Card VStack
-                            VStack {
-                                ScrollView {
-                                    VStack(spacing: 10) {
-                                        Spacer(minLength: 10)
-                                        Text("\"\(currentQuote.quote)\"")
-                                            .font(.system(size: calculatedQuoteFontSize))
-                                            .fontWeight(.bold)
-                                            .multilineTextAlignment(.center)
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal)
-                                        Text("- \(currentQuote.author)")
-                                            .font(.system(size: calculatedAuthorFontSize))
-                                            .foregroundColor(.white.opacity(0.8))
-                                            .padding(.bottom, 5)
-                                        Spacer(minLength: 10)
-                                    }
-                                    .frame(minHeight: quoteAreaMaxHeight * 0.9)
-                                }
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            }
-                            .padding()
-                            .background(Color.black.opacity(0.3))
-                            .cornerRadius(12)
-                            .shadow(color: Color.black.opacity(0.5), radius: 10, x: 0, y: 5)
-                            .clipped()
-                            .frame(maxHeight: quoteAreaMaxHeight)
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .bottom).combined(with: .opacity),
-                                removal: .opacity
-                            ))
-                            .animation(.easeInOut(duration: 0.5), value: currentQuote.id)
-                            .id(currentQuote.id)
-                            .onTapGesture {
-                                // Show a new random quote from the filtered list
-                                if !filteredQuotes.isEmpty {
-                                    let newQuote = filteredQuotes.randomElement()
-                                    if let newQuote = newQuote {
-                                        viewModel.currentQuote = newQuote
-                                    }
+                    ZStack(alignment: .top) {
+                        VStack(spacing: 20) {
+                            Picker("Category", selection: $selectedCategory) {
+                                ForEach(categories, id: \.self) { category in
+                                    Text(category).tag(category)
                                 }
                             }
+                            .pickerStyle(.segmented)
                             .padding(.horizontal)
-                        } else if viewModel.errorMessage == nil {
-                            Spacer()
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(1.5)
-                            Text("Loading Quote...")
-                                 .foregroundColor(.white)
-                            Spacer()
-                        }
-
-                        // --- Action Buttons Area ---
-                        // Only show if a quote is loaded
-                        if let quoteForButtonCheck = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
-                             HStack(spacing: 20) {
-                                Button {
-                                    viewModel.toggleCurrentQuoteFavorite()
-                                } label: {
-                                    Label("Favorite", systemImage: favoritesManager.isFavorite(quote: quoteForButtonCheck) ? "heart.fill" : "heart")
-                                        .font(.caption)
-                                        .foregroundColor(favoritesManager.isFavorite(quote: quoteForButtonCheck) ? .red : .white)
-                                        .accessibilityLabel(favoritesManager.isFavorite(quote: quoteForButtonCheck) ? "Remove from favorites" : "Add to favorites")
+                            .background(
+                                GeometryReader { pickerProxy in
+                                    Color.clear.preference(
+                                        key: TopSectionBoundsPreferenceKey.self,
+                                        value: pickerProxy.frame(in: .global)
+                                    )
                                 }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 8)
-                                .background(Color.black.opacity(0.2))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            )
 
-                                Button {
-                                    isSharePresented = true
-                                } label: {
-                                    Label("Share", systemImage: "square.and.arrow.up")
-                                        .font(.caption)
-                                        .foregroundColor(.white)
-                                        .accessibilityLabel("Share this quote")
+                            // --- Error Message Area ---
+                            if let errorMessage = viewModel.errorMessage {
+                                Text(errorMessage)
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color.red.opacity(0.8))
+                                    .cornerRadius(8)
+                                    .frame(maxHeight: geometry.size.height * 0.1) // Limit error height
+                                    .padding(.horizontal) // Add padding if needed
+                            }
+
+                            // --- Filtered Quote Area ---
+                            let filteredQuotes: [Quote] = {
+                                if selectedCategory == "All" {
+                                    return viewModel.allQuotes
+                                } else {
+                                    return viewModel.allQuotes.filter { $0.category == selectedCategory }
                                 }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 8)
-                                .background(Color.black.opacity(0.2))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                             }
-                             .padding(.bottom, 10)
+                            }()
+
+                            if let currentQuote = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
+                                // Quote Card VStack
+                                VStack {
+                                    ScrollView {
+                                        VStack(spacing: 10) {
+                                            Spacer(minLength: 10)
+                                            Text("\"\(currentQuote.quote)\"")
+                                                .font(fontStyle.quoteFont(size: calculatedQuoteFontSize))
+                                                .multilineTextAlignment(.center)
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal)
+                                            Text("- \(currentQuote.author)")
+                                                .font(fontStyle.authorFont(size: calculatedAuthorFontSize))
+                                                .foregroundColor(.white.opacity(0.85))
+                                                .padding(.bottom, 5)
+                                            Spacer(minLength: 10)
+                                        }
+                                        .frame(minHeight: quoteAreaMaxHeight * 0.9)
+                                    }
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                }
+                                .padding()
+                                .background(
+                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                        .fill(colorPack.cardBackground)
+                                        .opacity(0.92)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                        .stroke(Color.white.opacity(0.16), lineWidth: 1)
+                                )
+                                .shadow(color: colorPack.accentColor.opacity(0.35), radius: 16, x: 0, y: 8)
+                                .frame(maxHeight: quoteAreaMaxHeight)
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .bottom).combined(with: .opacity),
+                                    removal: .opacity
+                                ))
+                                .animation(.easeInOut(duration: 0.5), value: currentQuote.id)
+                                .id(currentQuote.id)
+                                .onTapGesture {
+                                    // Show a new random quote from the filtered list
+                                    if !filteredQuotes.isEmpty {
+                                        let newQuote = filteredQuotes.randomElement()
+                                        if let newQuote = newQuote {
+                                            viewModel.currentQuote = newQuote
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal)
+                            } else if viewModel.errorMessage == nil {
+                                Spacer()
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(1.5)
+                                Text("Loading Quote...")
+                                    .foregroundColor(.white)
+                                Spacer()
+                            }
+
+                            // --- Action Buttons Area ---
+                            // Only show if a quote is loaded
+                            if let quoteForButtonCheck = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
+                                let isFavorite = favoritesManager.isFavorite(quote: quoteForButtonCheck)
+
+                                HStack(spacing: 20) {
+                                    Button {
+                                        viewModel.toggleCurrentQuoteFavorite()
+                                    } label: {
+                                        Label("Favorite", systemImage: isFavorite ? "heart.fill" : "heart")
+                                            .font(.caption.bold())
+                                            .foregroundColor(.white)
+                                            .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                    .fill((isFavorite ? Color.red : colorPack.accentColor).opacity(isFavorite ? 0.8 : 0.45))
+                                            )
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                                            )
+                                    }
+
+                                    Button {
+                                        isSharePresented = true
+                                    } label: {
+                                        Label("Share", systemImage: "square.and.arrow.up")
+                                            .font(.caption.bold())
+                                            .foregroundColor(.white)
+                                            .accessibilityLabel("Share this quote")
+                                    }
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .fill(colorPack.secondaryAccent.opacity(0.45))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                            .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                                    )
+                                }
+                                .padding(.bottom, 10)
+                            }
+                        } // End Content VStack
+                        .padding(.top, 12)
+                        .padding(.bottom, geometry.safeAreaInsets.bottom + 20)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+                        if showStreakPopup {
+                            // Overlay streak summary in the upper third of the screen
+                            StreakHeaderView(summary: engagementTracker.summary, colorPack: colorPack) {
+                                if let dailyQuote = viewModel.getDailyQuote() {
+                                    NotificationManager.shared.scheduleDailyQuoteNotification(
+                                        quote: dailyQuote,
+                                        hour: dailyReminderHour,
+                                        minute: dailyReminderMinute
+                                    )
+                                }
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    showStreakPopup = false
+                                }
+                                showingSettings = true
+                            }
+                            .padding(.horizontal, 16)
+                            .frame(maxWidth: min(geometry.size.width - 32, 520))
+                            .position(x: geometry.size.width / 2, y: popupVerticalAnchor)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                            .shadow(radius: 18)
+                            .onTapGesture {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    showStreakPopup = false
+                                }
+                            }
                         }
-
-
-                    } // End Main VStack
-                    .padding(.vertical, 20) // Overall vertical padding
-                    .frame(width: geometry.size.width, height: geometry.size.height) // VStack fills GeometryReader
-
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+                    .onPreferenceChange(TopSectionBoundsPreferenceKey.self) { globalFrame in
+                        guard globalFrame.width > 0, globalFrame.height > 0 else { return }
+                        let localFrame = CGRect(
+                            x: globalFrame.minX,
+                            y: globalFrame.minY - containerOriginY,
+                            width: globalFrame.width,
+                            height: globalFrame.height
+                        )
+                        topSectionBounds = localFrame
+                    }
                 } // End GeometryReader
 
             } // End ZStack
@@ -220,13 +289,32 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showingSettings) {
-                SettingsView(dailyReminderHour: $dailyReminderHour, dailyReminderMinute: $dailyReminderMinute)
+                SettingsView(
+                    dailyReminderHour: $dailyReminderHour,
+                    dailyReminderMinute: $dailyReminderMinute,
+                    selectedThemeColorPack: $selectedColorPackRawValue,
+                    selectedFontStyle: $selectedFontStyleRawValue,
+                    selectedBackgroundStyle: $selectedBackgroundStyleRawValue
+                )
             }
             // --- MODIFIED .onAppear ---
             .onAppear {
                 // Initial quote load if needed
                 if viewModel.currentQuote == nil && viewModel.errorMessage == nil {
                     viewModel.setCurrentQuoteToDaily()
+                }
+
+                if !hasPresentedStreakPopup {
+                    hasPresentedStreakPopup = true
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.85, blendDuration: 0.4)) {
+                        showStreakPopup = true
+                    }
+
+                    DispatchQueue.main.asyncAfter(deadline: .now() + streakPopupDisplayDuration) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showStreakPopup = false
+                        }
+                    }
                 }
 
                 // Record that the user viewed today's quote for streak tracking
@@ -270,6 +358,7 @@ struct ContentView: View {
 // MARK: - Streak UI
 struct StreakHeaderView: View {
     let summary: EngagementTracker.StreakSummary
+    let colorPack: ThemeColorPack
     let onReminderAction: () -> Void
 
     var body: some View {
@@ -277,23 +366,23 @@ struct StreakHeaderView: View {
             HStack {
                 Label("\(summary.currentStreak)-day streak", systemImage: summary.currentStreak > 0 ? "flame.fill" : "flame")
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundStyle(Color.white, colorPack.secondaryAccent.opacity(0.8))
                 Spacer()
                 Text("Best \(summary.bestStreak)")
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(Color.white.opacity(0.85))
             }
 
-            StreakHistoryRow(history: summary.recentHistory)
+            StreakHistoryRow(history: summary.recentHistory, colorPack: colorPack)
 
             if let lastViewed = summary.lastViewed {
                 Text("Last read \(lastViewed, format: .relative(presentation: .numeric))")
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.75))
+                    .foregroundColor(.white.opacity(0.8))
             } else {
                 Text("Read today's quote to start your streak!")
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.75))
+                    .foregroundColor(.white.opacity(0.8))
             }
 
             if summary.needsReminderNudge, summary.lastViewed != nil {
@@ -305,19 +394,23 @@ struct StreakHeaderView: View {
                     .font(.caption.bold())
                     .padding(.vertical, 6)
                     .padding(.horizontal, 12)
-                    .background(Color.white.opacity(0.15))
+                    .background(colorPack.secondaryAccent.opacity(0.35))
                     .foregroundColor(.white)
                     .clipShape(Capsule())
                 }
             }
         }
         .padding()
-        .background(Color.black.opacity(0.25))
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(colorPack.cardBackground)
+                .opacity(0.9)
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(Color.white.opacity(0.14), lineWidth: 1)
+        )
+        .shadow(color: colorPack.accentColor.opacity(0.25), radius: 12, x: 0, y: 8)
         .padding(.horizontal)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("You are on a \(summary.currentStreak) day streak. Best streak \(summary.bestStreak).")
@@ -326,6 +419,7 @@ struct StreakHeaderView: View {
 
 struct StreakHistoryRow: View {
     let history: [EngagementTracker.DailyEngagement]
+    let colorPack: ThemeColorPack
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -356,9 +450,9 @@ struct StreakHistoryRow: View {
 
     private func color(for day: EngagementTracker.DailyEngagement) -> Color {
         if day.viewed && day.favorited {
-            return Color.orange
+            return colorPack.accentColor
         } else if day.viewed {
-            return Color.green
+            return colorPack.secondaryAccent.opacity(0.9)
         } else {
             return Color.white.opacity(0.25)
         }
@@ -390,10 +484,204 @@ struct StreakHistoryRow: View {
     }()
 }
 
+// MARK: - Layout Preferences
+private struct TopSectionBoundsPreferenceKey: PreferenceKey {
+    static var defaultValue: CGRect = .zero
+
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if !next.isEmpty {
+            value = next
+        }
+    }
+}
+
+// MARK: - Background Helpers
+struct QuoteBackgroundView: View {
+    let style: QuoteBackgroundStyle
+    let colorPack: ThemeColorPack
+
+    var body: some View {
+        Group {
+            switch style {
+            case .classic:
+                LinearGradient(
+                    colors: [
+                        colorPack.secondaryAccent.opacity(0.65),
+                        Color.black.opacity(0.9)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            case .sunrise:
+                ZStack {
+                    LinearGradient(
+                        colors: [
+                            Color(red: 1.0, green: 0.75, blue: 0.45),
+                            Color(red: 0.98, green: 0.47, blue: 0.45),
+                            Color(red: 0.4, green: 0.22, blue: 0.43)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    RadialGradient(
+                        gradient: Gradient(colors: [Color.white.opacity(0.35), Color.clear]),
+                        center: .topTrailing,
+                        startRadius: 40,
+                        endRadius: 380
+                    )
+                    .blendMode(.screen)
+                }
+            case .aurora:
+                ZStack {
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.07, green: 0.12, blue: 0.28),
+                            Color(red: 0.03, green: 0.29, blue: 0.36),
+                            Color(red: 0.18, green: 0.51, blue: 0.53)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    RadialGradient(
+                        gradient: Gradient(colors: [colorPack.accentColor.opacity(0.55), Color.clear]),
+                        center: .leading,
+                        startRadius: 10,
+                        endRadius: 420
+                    )
+                    .blendMode(.screen)
+                    RadialGradient(
+                        gradient: Gradient(colors: [Color.purple.opacity(0.4), Color.clear]),
+                        center: .bottomTrailing,
+                        startRadius: 60,
+                        endRadius: 500
+                    )
+                    .blendMode(.screen)
+                }
+            case .midnight:
+                ZStack {
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.04, green: 0.06, blue: 0.18),
+                            Color(red: 0.12, green: 0.16, blue: 0.31),
+                            Color(red: 0.21, green: 0.12, blue: 0.35)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.05), Color.clear],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .blendMode(.screen)
+                    StarsOverlay()
+                        .opacity(0.35)
+                }
+            case .ocean:
+                ZStack {
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.0, green: 0.62, blue: 0.86),
+                            Color(red: 0.0, green: 0.45, blue: 0.68),
+                            Color(red: 0.0, green: 0.24, blue: 0.44)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    RadialGradient(
+                        gradient: Gradient(colors: [Color.white.opacity(0.25), Color.clear]),
+                        center: UnitPoint(x: 0.2, y: 0.2),
+                        startRadius: 20,
+                        endRadius: 420
+                    )
+                    .blendMode(.screen)
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.05), Color.clear],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Decorative Overlays
+private struct StarsOverlay: View {
+    var body: some View {
+        GeometryReader { geometry in
+            let size = geometry.size
+            Canvas { context, _ in
+                let starCount = 80
+                for _ in 0..<starCount {
+                    let x = CGFloat.random(in: 0...size.width)
+                    let y = CGFloat.random(in: 0...size.height)
+                    let circleSize = CGFloat.random(in: 1.5...2.8)
+                    let alpha = Double.random(in: 0.25...0.6)
+                    let rect = CGRect(x: x, y: y, width: circleSize, height: circleSize)
+                    context.fill(
+                        Path(ellipseIn: rect),
+                        with: .color(Color.white.opacity(alpha))
+                    )
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Appearance Preview
+struct AppearancePreviewCard: View {
+    let colorPack: ThemeColorPack
+    let fontStyle: QuoteFontStyle
+    let backgroundStyle: QuoteBackgroundStyle
+
+    var body: some View {
+        ZStack {
+            QuoteBackgroundView(style: backgroundStyle, colorPack: colorPack)
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            VStack(alignment: .center, spacing: 12) {
+                Text("Your Daily Quote")
+                    .font(fontStyle.quoteFont(size: 18))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                Text("- Preview Author")
+                    .font(fontStyle.authorFont(size: 12))
+                    .foregroundColor(.white.opacity(0.85))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 20)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(colorPack.cardBackground)
+                    .opacity(0.9)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            )
+            .shadow(color: colorPack.accentColor.opacity(0.3), radius: 10, x: 0, y: 6)
+            .padding(12)
+        }
+        .frame(height: 160)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Theme preview showing current color pack, font, and background")
+    }
+}
+
 // MARK: - SettingsView
 struct SettingsView: View {
     @Binding var dailyReminderHour: Int
     @Binding var dailyReminderMinute: Int
+    @Binding var selectedThemeColorPack: String
+    @Binding var selectedFontStyle: String
+    @Binding var selectedBackgroundStyle: String
     @Environment(\.dismiss) private var dismiss
 
     // Helper to create a Date from hour/minute
@@ -405,7 +693,11 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        let colorPack = ThemeColorPack(rawValue: selectedThemeColorPack) ?? .classic
+        let fontStyle = QuoteFontStyle(rawValue: selectedFontStyle) ?? .rounded
+        let backgroundStyle = QuoteBackgroundStyle(rawValue: selectedBackgroundStyle) ?? .classic
+
+        return NavigationStack {
             Form {
                 Section(header: Text("Daily Reminder Time")) {
                     DatePicker(
@@ -420,6 +712,41 @@ struct SettingsView: View {
                         ),
                         displayedComponents: .hourAndMinute
                     )
+                }
+
+                Section(header: Text("Appearance")) {
+                    Picker("Color Pack", selection: $selectedThemeColorPack) {
+                        ForEach(ThemeColorPack.allCases) { pack in
+                            Label(pack.displayName, systemImage: "circle.fill")
+                                .labelStyle(.titleAndIcon)
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(pack.secondaryAccent, pack.accentColor)
+                                .tag(pack.rawValue)
+                        }
+                    }
+                    .pickerStyle(.navigationLink)
+
+                    Picker("Quote Font", selection: $selectedFontStyle) {
+                        ForEach(QuoteFontStyle.allCases) { style in
+                            Text(style.displayName).tag(style.rawValue)
+                        }
+                    }
+                    .pickerStyle(.navigationLink)
+
+                    Picker("Background", selection: $selectedBackgroundStyle) {
+                        ForEach(QuoteBackgroundStyle.allCases) { style in
+                            Label(style.displayName, systemImage: style.iconName)
+                                .tag(style.rawValue)
+                        }
+                    }
+                    .pickerStyle(.navigationLink)
+
+                    AppearancePreviewCard(
+                        colorPack: colorPack,
+                        fontStyle: fontStyle,
+                        backgroundStyle: backgroundStyle
+                    )
+                    .padding(.top, 6)
                 }
             }
             .navigationTitle("Settings")
