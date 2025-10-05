@@ -115,6 +115,13 @@ enum QuoteBackgroundStyle: String, CaseIterable, Identifiable {
     case aurora
     case midnight
     case ocean
+    case winterCabin
+    case forestStream
+    case oceanCliff
+    case rainyWindow
+    case autumnCabin
+    case springCabin
+    case cozyWindow
 
     var id: String { rawValue }
 
@@ -125,6 +132,13 @@ enum QuoteBackgroundStyle: String, CaseIterable, Identifiable {
         case .aurora: return "Aurora"
         case .midnight: return "Midnight"
         case .ocean: return "Tropical Ocean"
+        case .winterCabin: return "Winter Cabin"
+        case .forestStream: return "Forest Stream"
+        case .oceanCliff: return "Ocean Cliff"
+        case .rainyWindow: return "Rainy Window"
+        case .autumnCabin: return "Autumn Cabin"
+        case .springCabin: return "Spring Cabin"
+        case .cozyWindow: return "Cozy Window"
         }
     }
 
@@ -135,6 +149,37 @@ enum QuoteBackgroundStyle: String, CaseIterable, Identifiable {
         case .aurora: return "sparkles"
         case .midnight: return "moon.stars.fill"
         case .ocean: return "wave.3.forward"
+        case .winterCabin: return "house.fill"
+        case .forestStream: return "leaf.fill"
+        case .oceanCliff: return "water.waves"
+        case .rainyWindow: return "cloud.rain.fill"
+        case .autumnCabin: return "house.lodge.fill"
+        case .springCabin: return "sun.max.fill"
+        case .cozyWindow: return "cup.and.saucer.fill"
+        }
+    }
+
+    var isPhotoBackground: Bool {
+        switch self {
+        case .winterCabin, .forestStream, .oceanCliff, .rainyWindow, .autumnCabin, .springCabin, .cozyWindow:
+            return true
+        default:
+            return false
+        }
+    }
+
+    var navigationBarColorScheme: ColorScheme { .dark }
+
+    var navigationBarBackgroundOpacity: Double {
+        switch self {
+        case .winterCabin, .forestStream, .oceanCliff, .rainyWindow, .autumnCabin, .springCabin, .cozyWindow:
+            return 0.35
+        case .midnight:
+            return 0.28
+        case .classic, .aurora, .ocean:
+            return 0.22
+        case .sunrise:
+            return 0.18
         }
     }
 }

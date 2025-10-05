@@ -45,6 +45,9 @@ struct ContentView: View {
         let colorPack = ThemeColorPack(rawValue: selectedColorPackRawValue) ?? .classic
         let fontStyle = QuoteFontStyle(rawValue: selectedFontStyleRawValue) ?? .rounded
         let backgroundStyle = QuoteBackgroundStyle(rawValue: selectedBackgroundStyleRawValue) ?? .classic
+        let isPhotoBackground = backgroundStyle.isPhotoBackground
+        let navigationBarColorScheme = backgroundStyle.navigationBarColorScheme
+        let navigationBarOverlayOpacity = backgroundStyle.navigationBarBackgroundOpacity
 
         return NavigationStack {
             ZStack {
@@ -118,13 +121,13 @@ struct ContentView: View {
                             .background(
                                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                                     .fill(colorPack.cardBackground)
-                                    .opacity(0.92)
+                                    .opacity(isPhotoBackground ? 0.0 : 0.92)
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                    .stroke(Color.white.opacity(0.16), lineWidth: 1)
+                                    .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.16), lineWidth: isPhotoBackground ? 0 : 1)
                             )
-                            .shadow(color: colorPack.accentColor.opacity(0.35), radius: 16, x: 0, y: 8)
+                            .shadow(color: isPhotoBackground ? Color.clear : colorPack.accentColor.opacity(0.35), radius: isPhotoBackground ? 0 : 16, x: 0, y: isPhotoBackground ? 0 : 8)
                             .frame(maxHeight: quoteAreaMaxHeight)
                             .transition(.asymmetric(
                                 insertion: .move(edge: .bottom).combined(with: .opacity),
@@ -169,11 +172,12 @@ struct ContentView: View {
                                         .padding(.vertical, 8)
                                         .background(
                                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                .fill((isFavorite ? Color.red : colorPack.accentColor).opacity(isFavorite ? 0.8 : 0.45))
+                                                .fill((isFavorite ? Color.red : colorPack.accentColor)
+                                                    .opacity(isPhotoBackground ? 0.1 : (isFavorite ? 0.8 : 0.45)))
                                         )
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                                                .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
                                         )
                                 }
 
@@ -189,11 +193,11 @@ struct ContentView: View {
                                 .padding(.vertical, 8)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(colorPack.secondaryAccent.opacity(0.45))
+                                        .fill(colorPack.secondaryAccent.opacity(isPhotoBackground ? 0.1 : 0.45))
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                                        .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
                                 )
                             }
                             .padding(.bottom, 10)
@@ -229,6 +233,9 @@ struct ContentView: View {
                 // Ensure viewModel and favoritesManager are passed correctly
                 FavoritesView(viewModel: viewModel, favoritesManager: favoritesManager)
             }
+            .toolbarColorScheme(navigationBarColorScheme, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(Color.black.opacity(navigationBarOverlayOpacity), for: .navigationBar)
             .sheet(isPresented: $isSharePresented) {
                 // Use ActivityView defined below
                 if let currentQuote = viewModel.currentQuote {
@@ -564,6 +571,20 @@ struct QuoteBackgroundView: View {
                         endPoint: .trailing
                     )
                 }
+            case .winterCabin:
+                PhotoBackground(assetName: "WinterCabin", overlayOpacity: 0.35)
+            case .forestStream:
+                PhotoBackground(assetName: "ForestStream", overlayOpacity: 0.3)
+            case .oceanCliff:
+                PhotoBackground(assetName: "OceanCliff", overlayOpacity: 0.25)
+            case .rainyWindow:
+                PhotoBackground(assetName: "RainyWindow", overlayOpacity: 0.4)
+            case .autumnCabin:
+                PhotoBackground(assetName: "AutumnCabin", overlayOpacity: 0.32)
+            case .springCabin:
+                PhotoBackground(assetName: "SpringCabin", overlayOpacity: 0.28)
+            case .cozyWindow:
+                PhotoBackground(assetName: "CozyWindow", overlayOpacity: 0.45)
             }
         }
     }
@@ -592,6 +613,20 @@ private struct StarsOverlay: View {
     }
 }
 
+// MARK: - Photo Background Wrapper
+private struct PhotoBackground: View {
+    let assetName: String
+    let overlayOpacity: Double
+
+    var body: some View {
+        Image(assetName)
+            .resizable()
+            .scaledToFill()
+            .overlay(Color.black.opacity(overlayOpacity))
+            .clipped()
+    }
+}
+
 // MARK: - Appearance Preview
 struct AppearancePreviewCard: View {
     let colorPack: ThemeColorPack
@@ -599,6 +634,7 @@ struct AppearancePreviewCard: View {
     let backgroundStyle: QuoteBackgroundStyle
 
     var body: some View {
+        let isPhotoBackground = backgroundStyle.isPhotoBackground
         ZStack {
             QuoteBackgroundView(style: backgroundStyle, colorPack: colorPack)
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
@@ -617,20 +653,20 @@ struct AppearancePreviewCard: View {
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(colorPack.cardBackground)
-                    .opacity(0.9)
+                    .opacity(isPhotoBackground ? 0.0 : 0.9)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                    .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.12), lineWidth: isPhotoBackground ? 0 : 1)
             )
-            .shadow(color: colorPack.accentColor.opacity(0.3), radius: 10, x: 0, y: 6)
+            .shadow(color: isPhotoBackground ? Color.clear : colorPack.accentColor.opacity(0.3), radius: isPhotoBackground ? 0 : 10, x: 0, y: isPhotoBackground ? 0 : 6)
             .padding(12)
         }
         .frame(height: 160)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.08), lineWidth: isPhotoBackground ? 0 : 1)
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Theme preview showing current color pack, font, and background")
@@ -746,4 +782,3 @@ struct ActivityView: UIViewControllerRepresentable {
 #Preview {
      ContentView()
 }
-
