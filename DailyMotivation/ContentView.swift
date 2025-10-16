@@ -4,6 +4,9 @@ import SwiftUI
 import UserNotifications // <-- Import UserNotifications
 
 struct ContentView: View {
+    // Environment
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+
     // StateObjects for ViewModel and FavoritesManager
     @StateObject private var favoritesManager: FavoritesManager
     @StateObject private var engagementTracker: EngagementTracker
@@ -56,156 +59,23 @@ struct ContentView: View {
 
                 // Use GeometryReader for responsive sizing
                 GeometryReader { geometry in
-                    // --- Calculate Responsive Font Size ---
-                    let quoteAreaMaxHeight = geometry.size.height * 0.75 // Max height for the quote card
-                    let calculatedQuoteFontSize = max(minQuoteFontSize, min(quoteAreaMaxHeight * fontHeightScaleFactor, maxQuoteFontSize))
-                    let calculatedAuthorFontSize = max(minQuoteFontSize * 0.6, min(calculatedQuoteFontSize * 0.5, maxQuoteFontSize * 0.6))
-                    VStack(spacing: 20) {
-                        ZStack(alignment: .top) {
-                            Picker("Category", selection: $selectedCategory) {
-                                ForEach(categories, id: \.self) { category in
-                                    Text(category).tag(category)
-                                }
-                            }
-                            .pickerStyle(.segmented)
-                            .padding(.horizontal)
-                            .opacity(showStreakPopup ? 0 : 1)
-                            .allowsHitTesting(!showStreakPopup)
-                            .accessibilityHidden(showStreakPopup)
-                        }
-                        .animation(.easeInOut(duration: 0.3), value: showStreakPopup)
-                        .frame(maxWidth: .infinity, alignment: .top)
-
-                        // --- Error Message Area ---
-                        if let errorMessage = viewModel.errorMessage {
-                            Text(errorMessage)
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.red.opacity(0.8))
-                                .cornerRadius(8)
-                                .frame(maxHeight: geometry.size.height * 0.1) // Limit error height
-                                .padding(.horizontal)
-                        }
-
-                        // --- Filtered Quote Area ---
-                        let filteredQuotes: [Quote] = {
-                            if selectedCategory == "All" {
-                                return viewModel.allQuotes
-                            } else {
-                                return viewModel.allQuotes.filter { $0.category == selectedCategory }
-                            }
-                        }()
-
-                        if let currentQuote = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
-                            // Quote Card VStack
-                            VStack {
-                                ScrollView {
-                                    VStack(spacing: 10) {
-                                        Spacer(minLength: 10)
-                                        Text("\"\(currentQuote.quote)\"")
-                                            .font(fontStyle.quoteFont(size: calculatedQuoteFontSize))
-                                            .multilineTextAlignment(.center)
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal)
-                                        Text("- \(currentQuote.author)")
-                                            .font(fontStyle.authorFont(size: calculatedAuthorFontSize))
-                                            .foregroundColor(.white.opacity(0.85))
-                                            .padding(.bottom, 5)
-                                        Spacer(minLength: 10)
-                                    }
-                                    .frame(minHeight: quoteAreaMaxHeight * 0.9)
-                                }
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            }
-                            .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                    .fill(colorPack.cardBackground)
-                                    .opacity(isPhotoBackground ? 0.0 : 0.92)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                    .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.16), lineWidth: isPhotoBackground ? 0 : 1)
-                            )
-                            .shadow(color: isPhotoBackground ? Color.clear : colorPack.accentColor.opacity(0.35), radius: isPhotoBackground ? 0 : 16, x: 0, y: isPhotoBackground ? 0 : 8)
-                            .frame(maxHeight: quoteAreaMaxHeight)
-                            .transition(.asymmetric(
-                                insertion: .move(edge: .bottom).combined(with: .opacity),
-                                removal: .opacity
-                            ))
-                            .animation(.easeInOut(duration: 0.5), value: currentQuote.id)
-                            .id(currentQuote.id)
-                            .onTapGesture {
-                                // Show a new random quote from the filtered list
-                                if !filteredQuotes.isEmpty {
-                                    let newQuote = filteredQuotes.randomElement()
-                                    if let newQuote = newQuote {
-                                        viewModel.currentQuote = newQuote
-                                    }
-                                }
-                            }
-                            .padding(.horizontal)
-                        } else if viewModel.errorMessage == nil {
-                            Spacer()
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(1.5)
-                            Text("Loading Quote...")
-                                .foregroundColor(.white)
-                            Spacer()
-                        }
-
-                        // --- Action Buttons Area ---
-                        // Only show if a quote is loaded
-                        if let quoteForButtonCheck = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
-                            let isFavorite = favoritesManager.isFavorite(quote: quoteForButtonCheck)
-
-                            HStack(spacing: 20) {
-                                Button {
-                                    viewModel.toggleCurrentQuoteFavorite()
-                                } label: {
-                                    Label("Favorite", systemImage: isFavorite ? "heart.fill" : "heart")
-                                        .font(.caption.bold())
-                                        .foregroundColor(.white)
-                                        .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                .fill((isFavorite ? Color.red : colorPack.accentColor)
-                                                    .opacity(isPhotoBackground ? 0.1 : (isFavorite ? 0.8 : 0.45)))
-                                        )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
-                                        )
-                                }
-
-                                Button {
-                                    isSharePresented = true
-                                } label: {
-                                    Label("Share", systemImage: "square.and.arrow.up")
-                                        .font(.caption.bold())
-                                        .foregroundColor(.white)
-                                        .accessibilityLabel("Share this quote")
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 8)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(colorPack.secondaryAccent.opacity(isPhotoBackground ? 0.1 : 0.45))
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
-                                )
-                            }
-                            .padding(.bottom, 10)
-                        }
-                    } // End Main VStack
-                    .padding(.top, 12)
-                    .padding(.bottom, geometry.safeAreaInsets.bottom + 20)
-                    .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
+                    QuoteLayoutView(
+                        size: geometry.size,
+                        safeAreaInsets: geometry.safeAreaInsets,
+                        verticalSizeClass: verticalSizeClass,
+                        categories: categories,
+                        selectedCategory: $selectedCategory,
+                        showStreakPopup: $showStreakPopup,
+                        isSharePresented: $isSharePresented,
+                        viewModel: viewModel,
+                        favoritesManager: favoritesManager,
+                        fontStyle: fontStyle,
+                        colorPack: colorPack,
+                        isPhotoBackground: isPhotoBackground,
+                        minQuoteFontSize: minQuoteFontSize,
+                        maxQuoteFontSize: maxQuoteFontSize,
+                        fontHeightScaleFactor: fontHeightScaleFactor
+                    )
                 } // End GeometryReader
 
             } // End ZStack
@@ -335,6 +205,226 @@ struct ContentView: View {
         } // End NavigationStack
     } // End body
 } // End ContentView struct
+
+// MARK: - Layout Extraction
+private struct QuoteLayoutView: View {
+    let size: CGSize
+    let safeAreaInsets: EdgeInsets
+    let verticalSizeClass: UserInterfaceSizeClass?
+    let categories: [String]
+    @Binding var selectedCategory: String
+    @Binding var showStreakPopup: Bool
+    @Binding var isSharePresented: Bool
+    @ObservedObject var viewModel: QuoteViewModel
+    let favoritesManager: FavoritesManager
+    let fontStyle: QuoteFontStyle
+    let colorPack: ThemeColorPack
+    let isPhotoBackground: Bool
+    let minQuoteFontSize: CGFloat
+    let maxQuoteFontSize: CGFloat
+    let fontHeightScaleFactor: CGFloat
+
+    var body: some View {
+        let isCompactHeight = (verticalSizeClass == .compact) || size.width > size.height
+        let containerSpacing: CGFloat = isCompactHeight ? 12 : 20
+        let safeTopInset = isCompactHeight ? safeAreaInsets.top : 0
+        let baseTopPadding: CGFloat = isCompactHeight ? max(140, size.height * 0.26) : 12
+        let effectiveTopPadding = baseTopPadding + safeTopInset
+        let bottomPadding: CGFloat = safeAreaInsets.bottom + (isCompactHeight ? 18 : 20)
+        let quoteHeightFactor: CGFloat = isCompactHeight ? 0.54 : 0.75
+        let quoteAreaMaxHeight = size.height * quoteHeightFactor
+        let cardMinHeightMultiplier: CGFloat = isCompactHeight ? 0.66 : 0.9
+        let adjustedFontScale = fontHeightScaleFactor * (isCompactHeight ? 0.85 : 1.0)
+        let calculatedQuoteFontSize = max(minQuoteFontSize, min(quoteAreaMaxHeight * adjustedFontScale, maxQuoteFontSize))
+        let calculatedAuthorFontSize = max(minQuoteFontSize * 0.6, min(calculatedQuoteFontSize * 0.5, maxQuoteFontSize * 0.6))
+        let horizontalPadding: CGFloat = isCompactHeight ? 12 : 16
+        let filteredQuotes: [Quote] = selectedCategory == "All"
+            ? viewModel.allQuotes
+            : viewModel.allQuotes.filter { $0.category == selectedCategory }
+        let currentQuote = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first
+
+        Group {
+            let layout = contentLayout(
+                filteredQuotes: filteredQuotes,
+                currentQuote: currentQuote,
+                isCompactHeight: isCompactHeight,
+                containerSpacing: containerSpacing,
+                topPadding: effectiveTopPadding,
+                bottomPadding: bottomPadding,
+                horizontalPadding: horizontalPadding,
+                quoteAreaMaxHeight: quoteAreaMaxHeight,
+                cardMinHeightMultiplier: cardMinHeightMultiplier,
+                calculatedQuoteFontSize: calculatedQuoteFontSize,
+                calculatedAuthorFontSize: calculatedAuthorFontSize
+            )
+
+            if isCompactHeight {
+                ScrollView(.vertical, showsIndicators: false) {
+                    layout
+                        .frame(maxWidth: .infinity, alignment: .top)
+                }
+            } else {
+                layout
+                    .frame(width: size.width, height: size.height, alignment: .top)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func contentLayout(
+        filteredQuotes: [Quote],
+        currentQuote: Quote?,
+        isCompactHeight: Bool,
+        containerSpacing: CGFloat,
+        topPadding: CGFloat,
+        bottomPadding: CGFloat,
+        horizontalPadding: CGFloat,
+        quoteAreaMaxHeight: CGFloat,
+        cardMinHeightMultiplier: CGFloat,
+        calculatedQuoteFontSize: CGFloat,
+        calculatedAuthorFontSize: CGFloat
+    ) -> some View {
+        VStack(spacing: containerSpacing) {
+            ZStack(alignment: .top) {
+                Picker("Category", selection: $selectedCategory) {
+                    ForEach(categories, id: \.self) { category in
+                        Text(category).tag(category)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, horizontalPadding)
+                .opacity(showStreakPopup ? 0 : 1)
+                .allowsHitTesting(!showStreakPopup)
+                .accessibilityHidden(showStreakPopup)
+            }
+            .animation(.easeInOut(duration: 0.3), value: showStreakPopup)
+            .frame(maxWidth: .infinity, alignment: .top)
+
+            if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.red.opacity(0.8))
+                    .cornerRadius(8)
+                    .frame(maxHeight: size.height * 0.1)
+                    .padding(.horizontal, horizontalPadding)
+            }
+
+            if let currentQuote {
+                VStack {
+                    ScrollView {
+                        VStack(spacing: 10) {
+                            Spacer(minLength: 10)
+                            Text("\"\(currentQuote.quote)\"")
+                                .font(fontStyle.quoteFont(size: calculatedQuoteFontSize))
+                                .multilineTextAlignment(.center)
+                                .foregroundColor(.white)
+                                .padding(.horizontal)
+                            Text("- \(currentQuote.author)")
+                                .font(fontStyle.authorFont(size: calculatedAuthorFontSize))
+                                .foregroundColor(.white.opacity(0.85))
+                                .padding(.bottom, 5)
+                            Spacer(minLength: 10)
+                        }
+                        .frame(minHeight: quoteAreaMaxHeight * cardMinHeightMultiplier)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(colorPack.cardBackground)
+                        .opacity(isPhotoBackground ? 0.0 : 0.92)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.16), lineWidth: isPhotoBackground ? 0 : 1)
+                )
+                .shadow(
+                    color: isPhotoBackground ? Color.clear : colorPack.accentColor.opacity(0.35),
+                    radius: isPhotoBackground ? 0 : 16,
+                    x: 0,
+                    y: isPhotoBackground ? 0 : 8
+                )
+                .frame(maxWidth: min(size.width * 0.92, isCompactHeight ? 540 : 640))
+                .frame(maxHeight: quoteAreaMaxHeight)
+                .transition(
+                    .asymmetric(
+                        insertion: .move(edge: .bottom).combined(with: .opacity),
+                        removal: .opacity
+                    )
+                )
+                .animation(.easeInOut(duration: 0.5), value: currentQuote.id)
+                .id(currentQuote.id)
+                .onTapGesture {
+                    if !filteredQuotes.isEmpty {
+                        if let newQuote = filteredQuotes.randomElement() {
+                            viewModel.currentQuote = newQuote
+                        }
+                    }
+                }
+                .padding(.horizontal, horizontalPadding)
+            } else if viewModel.errorMessage == nil {
+                Spacer()
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    .scaleEffect(1.5)
+                Text("Loading Quote...")
+                    .foregroundColor(.white)
+                Spacer()
+            }
+
+            if let quoteForButtons = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
+                let isFavorite = favoritesManager.isFavorite(quote: quoteForButtons)
+
+                HStack(spacing: 20) {
+                    Button {
+                        viewModel.toggleCurrentQuoteFavorite()
+                    } label: {
+                        Label("Favorite", systemImage: isFavorite ? "heart.fill" : "heart")
+                            .font(.caption.bold())
+                            .foregroundColor(.white)
+                            .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill((isFavorite ? Color.red : colorPack.accentColor)
+                                        .opacity(isPhotoBackground ? 0.1 : (isFavorite ? 0.8 : 0.45)))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
+                            )
+                    }
+
+                    Button {
+                        isSharePresented = true
+                    } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                            .font(.caption.bold())
+                            .foregroundColor(.white)
+                            .accessibilityLabel("Share this quote")
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(colorPack.secondaryAccent.opacity(isPhotoBackground ? 0.1 : 0.45))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
+                    )
+                }
+                .padding(.bottom, 10)
+                .padding(.horizontal, horizontalPadding)
+            }
+        }
+        .padding(.top, topPadding)
+        .padding(.bottom, bottomPadding)
+    }
+}
 
 // MARK: - Streak UI
 struct StreakHeaderView: View {
