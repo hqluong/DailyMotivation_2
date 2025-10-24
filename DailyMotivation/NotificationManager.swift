@@ -23,9 +23,13 @@ class NotificationManager {
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
             if let error = error {
+#if DEBUG
                 print("Error requesting notification authorization: \(error.localizedDescription)")
+#endif
             }
+#if DEBUG
             print("Notification permission granted: \(granted)")
+#endif
             DispatchQueue.main.async {
                 completion(granted)
             }
@@ -37,7 +41,9 @@ class NotificationManager {
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in
             guard settings.authorizationStatus == .authorized else {
+#if DEBUG
                 print("Cannot schedule notification: Not authorized.")
+#endif
                 return
             }
             let content = UNMutableNotificationContent()
@@ -52,9 +58,13 @@ class NotificationManager {
             center.removePendingNotificationRequests(withIdentifiers: [self.notificationIdentifier])
             center.add(request) { error in
                 if let error = error {
+#if DEBUG
                     print("Error scheduling notification: \(error.localizedDescription)")
+#endif
                 } else {
+#if DEBUG
                     print("Daily notification scheduled successfully for \(hour):\(String(format: "%02d", minute)) with quote ID: \(quote.id)")
+#endif
                 }
             }
         }
@@ -65,6 +75,8 @@ class NotificationManager {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [notificationIdentifier])
         center.removeAllDeliveredNotifications()
+#if DEBUG
         print("Cancelled pending daily notifications.")
+#endif
     }
 }

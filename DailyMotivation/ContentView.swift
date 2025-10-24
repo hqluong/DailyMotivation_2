@@ -35,10 +35,13 @@ struct ContentView: View {
     private let fontHeightScaleFactor: CGFloat = 0.09
     private let streakPopupDisplayDuration: TimeInterval = 4.0
 
-    // Initializer to inject FavoritesManager
-    init() {
-        let favManager = FavoritesManager()
-        let tracker = EngagementTracker()
+    // Initializer to inject dependencies, enabling previews and tests to supply isolated stores.
+    init(
+        favoritesManager: FavoritesManager = FavoritesManager(),
+        engagementTracker: EngagementTracker = EngagementTracker()
+    ) {
+        let favManager = favoritesManager
+        let tracker = engagementTracker
         _favoritesManager = StateObject(wrappedValue: favManager)
         _engagementTracker = StateObject(wrappedValue: tracker)
         _viewModel = StateObject(wrappedValue: QuoteViewModel(favoritesManager: favManager, engagementTracker: tracker))
@@ -870,5 +873,17 @@ struct ActivityView: UIViewControllerRepresentable {
 
 // MARK: - Preview
 #Preview {
-     ContentView()
+    guard
+        let favoritesStore = UserDefaults(suiteName: "preview.content.favorites"),
+        let engagementStore = UserDefaults(suiteName: "preview.content.engagement")
+    else {
+        fatalError("Unable to create preview user defaults stores.")
+    }
+    favoritesStore.removePersistentDomain(forName: "preview.content.favorites")
+    engagementStore.removePersistentDomain(forName: "preview.content.engagement")
+
+    return ContentView(
+        favoritesManager: FavoritesManager(userDefaults: favoritesStore),
+        engagementTracker: EngagementTracker(userDefaults: engagementStore)
+    )
 }

@@ -47,6 +47,10 @@ final class EngagementTracker: ObservableObject {
     private let viewedDatesKey = "engagement.viewedDates"
     private let favoriteDatesKey = "engagement.favoriteDates"
     private let bestStreakKey = "engagement.bestStreak"
+    private static let maxTrackedDays = 365
+    private static let maxBestStreak = 10_000
+    private static let maxStoredDataSize = 128 * 1024
+    private static let maxHistoryAge: TimeInterval = 60 * 60 * 24 * 365 * 5 // five years
 
     private var viewedDays: Set<Date>
     private var favoritedDays: Set<Date>
@@ -58,12 +62,26 @@ final class EngagementTracker: ObservableObject {
         calendar: Calendar = .current
     ) {
         self.userDefaults = userDefaults
-        self.historyWindow = historyWindow
+        self.historyWindow = max(0, historyWindow)
         self.calendar = calendar
 
-        self.viewedDays = EngagementTracker.loadDates(forKey: viewedDatesKey, from: userDefaults, calendar: calendar)
-        self.favoritedDays = EngagementTracker.loadDates(forKey: favoriteDatesKey, from: userDefaults, calendar: calendar)
-        self.bestStreak = userDefaults.integer(forKey: bestStreakKey)
+        let referenceDate = Date()
+        self.viewedDays = EngagementTracker.loadDates(
+            forKey: viewedDatesKey,
+            from: userDefaults,
+            calendar: calendar,
+            reference: referenceDate
+        )
+        self.favoritedDays = EngagementTracker.loadDates(
+            forKey: favoriteDatesKey,
+            from: userDefaults,
+            calendar: calendar,
+            reference: referenceDate
+        )
+        self.bestStreak = EngagementTracker.loadBestStreak(
+            forKey: bestStreakKey,
+            from: userDefaults
+        )
         self.summary = .empty
 
         recalculateSummary()
@@ -100,20 +118,43 @@ final class EngagementTracker: ObservableObject {
 }
 
 private extension EngagementTracker {
-    static func loadDates(forKey key: String, from userDefaults: UserDefaults, calendar: Calendar) -> Set<Date> {
+    static func loadDates(forKey key: String, from userDefaults: UserDefaults, calendar: Calendar, reference: Date) -> Set<Date> {
         guard
             let data = userDefaults.data(forKey: key),
+            data.count <= maxStoredDataSize,
             let decoded = try? JSONDecoder().decode([Date].self, from: data)
         else {
             return []
         }
-        return Set(decoded.map { calendar.startOfDay(for: $0) })
+        let normalized = decoded.map { calendar.startOfDay(for: $0) }
+        let trimmedToRecent = normalized.filter {
+            abs($0.timeIntervalSince(reference)) <= maxHistoryAge
+        }
+        if trimmedToRecent.count > maxTrackedDays {
+            let sorted = trimmedToRecent.sorted(by: >)
+            return Set(sorted.prefix(maxTrackedDays))
+        }
+        return Set(trimmedToRecent)
+    }
+
+    static func loadBestStreak(forKey key: String, from userDefaults: UserDefaults) -> Int {
+        let storedValue = userDefaults.integer(forKey: key)
+        if storedValue < 0 { return 0 }
+        return min(storedValue, maxBestStreak)
     }
 
     func saveDates(_ dates: Set<Date>, key: String) {
-        let ordered = Array(dates)
-        if let data = try? JSONEncoder().encode(ordered) {
+        let sanitized = sanitizeDates(dates, reference: Date())
+        let ordered = Array(sanitized)
+        if let data = try? JSONEncoder().encode(ordered),
+           data.count <= Self.maxStoredDataSize {
             userDefaults.set(data, forKey: key)
+        } else if sanitized.isEmpty {
+            userDefaults.removeObject(forKey: key)
+        } else {
+#if DEBUG
+            print("Unable to persist engagement dates for \(key); payload too large or encoding failed.")
+#endif
         }
     }
 
@@ -179,5 +220,15 @@ private extension EngagementTracker {
             results.append(DailyEngagement(date: normalized, viewed: viewed, favorited: favorited))
         }
         return results
+    }
+
+    func sanitizeDates(_ dates: Set<Date>, reference: Date) -> Set<Date> {
+        let normalized = dates.map { calendar.startOfDay(for: $0) }
+        let trimmed = normalized.filter { abs($0.timeIntervalSince(reference)) <= Self.maxHistoryAge }
+        if trimmed.count > Self.maxTrackedDays {
+            let sorted = trimmed.sorted(by: >)
+            return Set(sorted.prefix(Self.maxTrackedDays))
+        }
+        return Set(trimmed)
     }
 }

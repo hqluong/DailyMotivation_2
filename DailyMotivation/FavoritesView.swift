@@ -7,6 +7,7 @@
 
 // MARK: - FavoritesView.swift
 
+import Foundation
 import SwiftUI
 
 struct FavoritesView: View {
@@ -54,13 +55,22 @@ struct FavoritesView: View {
 // Preview requires providing mock/sample data
 #Preview {
     // Create dummy data for preview
-    let previewFavManager = FavoritesManager()
+    guard
+        let favoritesStore = UserDefaults(suiteName: "preview.favorites"),
+        let engagementStore = UserDefaults(suiteName: "preview.engagement")
+    else {
+        fatalError("Unable to create preview user defaults stores.")
+    }
+    favoritesStore.removePersistentDomain(forName: "preview.favorites")
+    engagementStore.removePersistentDomain(forName: "preview.engagement")
+
+    let previewFavManager = FavoritesManager(userDefaults: favoritesStore)
     let previewQuote1 = Quote(quote: "Preview Favorite Quote 1", author: "Author 1")
     let previewQuote2 = Quote(quote: "Preview Favorite Quote 2", author: "Author 2")
     previewFavManager.addFavorite(quote: previewQuote1)
     previewFavManager.addFavorite(quote: previewQuote2)
 
-    let previewTracker = EngagementTracker(userDefaults: UserDefaults(suiteName: "preview.engagement") ?? .standard)
+    let previewTracker = EngagementTracker(userDefaults: engagementStore)
     previewTracker.resetAll()
     let previewViewModel = QuoteViewModel(favoritesManager: previewFavManager, engagementTracker: previewTracker)
     // Manually add the quotes to the ViewModel's list for the preview
