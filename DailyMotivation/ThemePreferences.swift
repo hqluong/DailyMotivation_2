@@ -122,6 +122,20 @@ enum QuoteBackgroundStyle: String, CaseIterable, Identifiable {
     case autumnCabin
     case springCabin
     case cozyWindow
+    case snowyRetreat
+    case mountainTrail
+    case sereneBedroom
+    case hiddenWaterfall
+    case cozySpices
+    case tropicalLagoon
+    case readingNook
+    case sunlitVineyard
+    case cherryBlossoms
+    case starlitShore
+    case alpineRiver
+    case goldenWillow
+    case coastalHeadland
+    case cabinMug
 
     var id: String { rawValue }
 
@@ -139,6 +153,20 @@ enum QuoteBackgroundStyle: String, CaseIterable, Identifiable {
         case .autumnCabin: return "Autumn Cabin"
         case .springCabin: return "Spring Cabin"
         case .cozyWindow: return "Cozy Window"
+        case .snowyRetreat: return "Snowy Retreat"
+        case .mountainTrail: return "Mountain Trail"
+        case .sereneBedroom: return "Serene Bedroom"
+        case .hiddenWaterfall: return "Hidden Waterfall"
+        case .cozySpices: return "Cozy Spices"
+        case .tropicalLagoon: return "Tropical Lagoon"
+        case .readingNook: return "Reading Nook"
+        case .sunlitVineyard: return "Sunlit Vineyard"
+        case .cherryBlossoms: return "Cherry Blossoms"
+        case .starlitShore: return "Starlit Shore"
+        case .alpineRiver: return "Alpine River"
+        case .goldenWillow: return "Golden Willow"
+        case .coastalHeadland: return "Coastal Headland"
+        case .cabinMug: return "Cabin Coffee"
         }
     }
 
@@ -156,12 +184,46 @@ enum QuoteBackgroundStyle: String, CaseIterable, Identifiable {
         case .autumnCabin: return "house.lodge.fill"
         case .springCabin: return "sun.max.fill"
         case .cozyWindow: return "cup.and.saucer.fill"
+        case .snowyRetreat: return "snowflake"
+        case .mountainTrail: return "figure.walk"
+        case .sereneBedroom: return "bed.double.fill"
+        case .hiddenWaterfall: return "drop.fill"
+        case .cozySpices: return "flame.fill"
+        case .tropicalLagoon: return "sun.max"
+        case .readingNook: return "book.fill"
+        case .sunlitVineyard: return "sun.max.circle"
+        case .cherryBlossoms: return "leaf.circle"
+        case .starlitShore: return "sparkles"
+        case .alpineRiver: return "snowflake"
+        case .goldenWillow: return "tree"
+        case .coastalHeadland: return "water.waves"
+        case .cabinMug: return "cup.and.saucer"
         }
     }
 
     var isPhotoBackground: Bool {
         switch self {
-        case .winterCabin, .forestStream, .oceanCliff, .rainyWindow, .autumnCabin, .springCabin, .cozyWindow:
+        case .winterCabin,
+             .forestStream,
+             .oceanCliff,
+             .rainyWindow,
+             .autumnCabin,
+             .springCabin,
+             .cozyWindow,
+             .snowyRetreat,
+             .mountainTrail,
+             .sereneBedroom,
+             .hiddenWaterfall,
+             .cozySpices,
+             .tropicalLagoon,
+             .readingNook,
+             .sunlitVineyard,
+             .cherryBlossoms,
+             .starlitShore,
+             .alpineRiver,
+             .goldenWillow,
+             .coastalHeadland,
+             .cabinMug:
             return true
         default:
             return false
@@ -172,7 +234,27 @@ enum QuoteBackgroundStyle: String, CaseIterable, Identifiable {
 
     var navigationBarBackgroundOpacity: Double {
         switch self {
-        case .winterCabin, .forestStream, .oceanCliff, .rainyWindow, .autumnCabin, .springCabin, .cozyWindow:
+        case .winterCabin,
+             .forestStream,
+             .oceanCliff,
+             .rainyWindow,
+             .autumnCabin,
+             .springCabin,
+             .cozyWindow,
+             .snowyRetreat,
+             .mountainTrail,
+             .sereneBedroom,
+             .hiddenWaterfall,
+             .cozySpices,
+             .tropicalLagoon,
+             .readingNook,
+             .sunlitVineyard,
+             .cherryBlossoms,
+             .starlitShore,
+             .alpineRiver,
+             .goldenWillow,
+             .coastalHeadland,
+             .cabinMug:
             return 0.35
         case .midnight:
             return 0.28

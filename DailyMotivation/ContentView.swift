@@ -678,6 +678,34 @@ struct QuoteBackgroundView: View {
                 PhotoBackground(assetName: "SpringCabin", overlayOpacity: 0.28)
             case .cozyWindow:
                 PhotoBackground(assetName: "CozyWindow", overlayOpacity: 0.45)
+            case .snowyRetreat:
+                PhotoBackground(assetName: "SnowyRetreat", overlayOpacity: 0.36)
+            case .mountainTrail:
+                PhotoBackground(assetName: "MountainTrail", overlayOpacity: 0.28)
+            case .sereneBedroom:
+                PhotoBackground(assetName: "SereneBedroom", overlayOpacity: 0.42)
+            case .hiddenWaterfall:
+                PhotoBackground(assetName: "HiddenWaterfall", overlayOpacity: 0.3)
+            case .cozySpices:
+                PhotoBackground(assetName: "CozySpices", overlayOpacity: 0.4)
+            case .tropicalLagoon:
+                PhotoBackground(assetName: "TropicalLagoon", overlayOpacity: 0.25)
+            case .readingNook:
+                PhotoBackground(assetName: "ReadingNook", overlayOpacity: 0.46)
+            case .sunlitVineyard:
+                PhotoBackground(assetName: "SunlitVineyard", overlayOpacity: 0.3)
+            case .cherryBlossoms:
+                PhotoBackground(assetName: "CherryBlossoms", overlayOpacity: 0.25)
+            case .starlitShore:
+                PhotoBackground(assetName: "StarlitShore", overlayOpacity: 0.42)
+            case .alpineRiver:
+                PhotoBackground(assetName: "AlpineRiver", overlayOpacity: 0.32)
+            case .goldenWillow:
+                PhotoBackground(assetName: "GoldenWillow", overlayOpacity: 0.3)
+            case .coastalHeadland:
+                PhotoBackground(assetName: "CoastalHeadland", overlayOpacity: 0.28)
+            case .cabinMug:
+                PhotoBackground(assetName: "CabinMug", overlayOpacity: 0.44)
             }
         }
     }
