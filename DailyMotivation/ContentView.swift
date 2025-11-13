@@ -53,7 +53,6 @@ struct ContentView: View {
         let backgroundStyle = QuoteBackgroundStyle(rawValue: selectedBackgroundStyleRawValue) ?? .classic
         let isPhotoBackground = backgroundStyle.isPhotoBackground
         let navigationBarColorScheme = backgroundStyle.navigationBarColorScheme
-        let navigationBarOverlayOpacity = backgroundStyle.navigationBarBackgroundOpacity
 
         return NavigationStack {
             ZStack {
@@ -107,8 +106,8 @@ struct ContentView: View {
                 FavoritesView(viewModel: viewModel, favoritesManager: favoritesManager)
             }
             .toolbarColorScheme(navigationBarColorScheme, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color.black.opacity(navigationBarOverlayOpacity), for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarBackground(Color.clear, for: .navigationBar)
             .sheet(isPresented: $isSharePresented) {
                 // Use ActivityView defined below
                 if let currentQuote = viewModel.currentQuote {
