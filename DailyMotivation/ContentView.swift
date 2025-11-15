@@ -286,6 +286,8 @@ private struct QuoteLayoutView: View {
         calculatedQuoteFontSize: CGFloat,
         calculatedAuthorFontSize: CGFloat
     ) -> some View {
+        let categoryFilter = selectedCategory == "All" ? nil : selectedCategory
+
         VStack(spacing: containerSpacing) {
             ZStack(alignment: .top) {
                 Picker("Category", selection: $selectedCategory) {
@@ -359,11 +361,7 @@ private struct QuoteLayoutView: View {
                 .animation(.easeInOut(duration: 0.5), value: currentQuote.id)
                 .id(currentQuote.id)
                 .onTapGesture {
-                    if !filteredQuotes.isEmpty {
-                        if let newQuote = filteredQuotes.randomElement() {
-                            viewModel.currentQuote = newQuote
-                        }
-                    }
+                    viewModel.showNewRandomQuote(category: categoryFilter)
                 }
                 .padding(.horizontal, horizontalPadding)
             } else if viewModel.errorMessage == nil {
