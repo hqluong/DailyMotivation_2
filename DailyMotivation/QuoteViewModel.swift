@@ -82,7 +82,7 @@ class QuoteViewModel: ObservableObject {
     
     // Set the current quote to a random one from the list
     /// Sets the current quote to a new random quote, avoiding the current one if possible.
-    func showNewRandomQuote(category: String? = nil) {
+    func showNewRandomQuote(categories: [String]? = nil) {
         guard !allQuotes.isEmpty else {
             currentQuote = nil
             return
@@ -90,8 +90,9 @@ class QuoteViewModel: ObservableObject {
         ensureSeenQuotesAreCurrent()
 
         let filteredQuotes: [Quote]
-        if let category = category, !category.isEmpty {
-            filteredQuotes = allQuotes.filter { $0.category == category }
+        if let categories, !categories.isEmpty {
+            let categorySet = Set(categories)
+            filteredQuotes = allQuotes.filter { categorySet.contains($0.category) }
         } else {
             filteredQuotes = allQuotes
         }
@@ -100,8 +101,19 @@ class QuoteViewModel: ObservableObject {
             return
         }
 
-        if let nextQuote = nextUnseenQuote(from: filteredQuotes) {
-            currentQuote = nextQuote
+        let nextQuote = nextUnseenQuote(from: filteredQuotes) ?? filteredQuotes.randomElement()
+        currentQuote = nextQuote
+    }
+
+    /// Picks a quote tailored to one or more mood categories, falling back to the full library if none match.
+    func showQuote(for categories: [String], allowFallbackToAll: Bool = true) {
+        let quotesForMood = allQuotes.filter { categories.contains($0.category) }
+        if !quotesForMood.isEmpty {
+            showNewRandomQuote(categories: categories)
+        } else if allowFallbackToAll {
+            showNewRandomQuote()
+        } else {
+            currentQuote = nil
         }
     }
     

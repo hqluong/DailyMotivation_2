@@ -3,6 +3,58 @@
 import SwiftUI
 import UserNotifications // <-- Import UserNotifications
 
+private struct MoodOption: Identifiable {
+    let id: String
+    let title: String
+    let emoji: String
+    let prompt: String
+    let categories: [String]
+    let colors: [Color]
+
+    static let presets: [MoodOption] = [
+        MoodOption(
+            id: "anxious",
+            title: "Anxious",
+            emoji: "😰",
+            prompt: "Ground & breathe",
+            categories: ["Mindfulness"],
+            colors: [Color.blue.opacity(0.8), Color.cyan]
+        ),
+        MoodOption(
+            id: "procrastinating",
+            title: "Procrastinating",
+            emoji: "🐢",
+            prompt: "A gentle push",
+            categories: ["Motivation"],
+            colors: [Color.orange.opacity(0.9), Color.pink]
+        ),
+        MoodOption(
+            id: "heartbroken",
+            title: "Heartbroken",
+            emoji: "💔",
+            prompt: "Slow care & hope",
+            categories: ["Happiness", "Mindfulness"],
+            colors: [Color.purple.opacity(0.85), Color.indigo]
+        ),
+        MoodOption(
+            id: "ambitious",
+            title: "Ambitious",
+            emoji: "🚀",
+            prompt: "Aim higher",
+            categories: ["Success", "Creativity"],
+            colors: [Color.green.opacity(0.9), Color.blue]
+        ),
+        MoodOption(
+            id: "burnedOut",
+            title: "Burned Out",
+            emoji: "😮‍💨",
+            prompt: "Rest & reset",
+            categories: ["Mindfulness", "Happiness"],
+            colors: [Color.gray.opacity(0.85), Color.blue.opacity(0.7)]
+        )
+    ]
+}
+
 struct ContentView: View {
     // Environment
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -21,12 +73,16 @@ struct ContentView: View {
     @AppStorage("dailyReminderHour") private var dailyReminderHour: Int = 9
     @AppStorage("dailyReminderMinute") private var dailyReminderMinute: Int = 0
     @AppStorage("selectedQuoteCategory") private var selectedCategory: String = "All"
+    @AppStorage("selectedMoodId") private var selectedMoodId: String = ""
     @AppStorage("selectedThemeColorPack") private var selectedColorPackRawValue: String = ThemeColorPack.classic.rawValue
     @AppStorage("selectedFontStyle") private var selectedFontStyleRawValue: String = QuoteFontStyle.rounded.rawValue
     @AppStorage("selectedBackgroundStyle") private var selectedBackgroundStyleRawValue: String = QuoteBackgroundStyle.classic.rawValue
+    @State private var hasAppliedInitialMood = false
 
     // Example categories - update as needed
     private let categories: [String] = ["All", "Success", "Creativity", "Mindfulness", "Motivation", "Happiness"]
+    private let moodOptions: [MoodOption] = MoodOption.presets
+    private var selectedMood: MoodOption? { moodOptions.first(where: { $0.id == selectedMoodId }) }
 
     // Constants for font scaling (adjust these as needed based on testing)
     private let minQuoteFontSize: CGFloat = 18
@@ -45,6 +101,14 @@ struct ContentView: View {
         _favoritesManager = StateObject(wrappedValue: favManager)
         _engagementTracker = StateObject(wrappedValue: tracker)
         _viewModel = StateObject(wrappedValue: QuoteViewModel(favoritesManager: favManager, engagementTracker: tracker))
+    }
+
+    private func handleMoodSelection(_ mood: MoodOption) {
+        selectedMoodId = mood.id
+        viewModel.showQuote(for: mood.categories)
+        if selectedCategory != "All" {
+            selectedCategory = "All"
+        }
     }
 
     var body: some View {
@@ -66,9 +130,12 @@ struct ContentView: View {
                         safeAreaInsets: geometry.safeAreaInsets,
                         verticalSizeClass: verticalSizeClass,
                         categories: categories,
+                        moodOptions: moodOptions,
+                        selectedMoodId: $selectedMoodId,
                         selectedCategory: $selectedCategory,
                         showStreakPopup: $showStreakPopup,
                         isSharePresented: $isSharePresented,
+                        onMoodSelected: handleMoodSelection,
                         viewModel: viewModel,
                         favoritesManager: favoritesManager,
                         fontStyle: fontStyle,
@@ -152,8 +219,14 @@ struct ContentView: View {
             }
             // --- MODIFIED .onAppear ---
             .onAppear {
-                // Initial quote load if needed
-                if viewModel.currentQuote == nil && viewModel.errorMessage == nil {
+                if !hasAppliedInitialMood {
+                    hasAppliedInitialMood = true
+                    if let mood = selectedMood {
+                        viewModel.showQuote(for: mood.categories)
+                    } else if viewModel.currentQuote == nil && viewModel.errorMessage == nil {
+                        viewModel.setCurrentQuoteToDaily()
+                    }
+                } else if viewModel.currentQuote == nil && viewModel.errorMessage == nil {
                     viewModel.setCurrentQuoteToDaily()
                 }
 
@@ -214,9 +287,12 @@ private struct QuoteLayoutView: View {
     let safeAreaInsets: EdgeInsets
     let verticalSizeClass: UserInterfaceSizeClass?
     let categories: [String]
+    let moodOptions: [MoodOption]
+    @Binding var selectedMoodId: String
     @Binding var selectedCategory: String
     @Binding var showStreakPopup: Bool
     @Binding var isSharePresented: Bool
+    let onMoodSelected: (MoodOption) -> Void
     @ObservedObject var viewModel: QuoteViewModel
     let favoritesManager: FavoritesManager
     let fontStyle: QuoteFontStyle
@@ -240,14 +316,50 @@ private struct QuoteLayoutView: View {
         let calculatedQuoteFontSize = max(minQuoteFontSize, min(quoteAreaMaxHeight * adjustedFontScale, maxQuoteFontSize))
         let calculatedAuthorFontSize = max(minQuoteFontSize * 0.6, min(calculatedQuoteFontSize * 0.5, maxQuoteFontSize * 0.6))
         let horizontalPadding: CGFloat = isCompactHeight ? 12 : 16
-        let filteredQuotes: [Quote] = selectedCategory == "All"
-            ? viewModel.allQuotes
-            : viewModel.allQuotes.filter { $0.category == selectedCategory }
-        let currentQuote = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first
+        let activeMood = moodOptions.first(where: { $0.id == selectedMoodId })
+        let effectiveCategories: [String]? = {
+            if selectedCategory != "All" {
+                return [selectedCategory]
+            }
+            if let activeMood, !activeMood.categories.isEmpty {
+                return activeMood.categories
+            }
+            return nil
+        }()
 
-        Group {
-            let layout = contentLayout(
-                filteredQuotes: filteredQuotes,
+        let filteredQuotes: [Quote] = {
+            guard let effectiveCategories, !effectiveCategories.isEmpty else {
+                return viewModel.allQuotes
+            }
+            let categorySet = Set(effectiveCategories)
+            return viewModel.allQuotes.filter { categorySet.contains($0.category) }
+        }()
+
+        let visibleQuotes = filteredQuotes.isEmpty ? viewModel.allQuotes : filteredQuotes
+        let currentQuote = visibleQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? visibleQuotes.first
+
+        if isCompactHeight {
+            ScrollView(.vertical, showsIndicators: false) {
+                contentLayout(
+                    effectiveCategories: effectiveCategories,
+                    filteredQuotes: visibleQuotes,
+                    currentQuote: currentQuote,
+                    isCompactHeight: isCompactHeight,
+                    containerSpacing: containerSpacing,
+                    topPadding: effectiveTopPadding,
+                    bottomPadding: bottomPadding,
+                    horizontalPadding: horizontalPadding,
+                    quoteAreaMaxHeight: quoteAreaMaxHeight,
+                    cardMinHeightMultiplier: cardMinHeightMultiplier,
+                    calculatedQuoteFontSize: calculatedQuoteFontSize,
+                    calculatedAuthorFontSize: calculatedAuthorFontSize
+                )
+                .frame(maxWidth: .infinity, alignment: .top)
+            }
+        } else {
+            contentLayout(
+                effectiveCategories: effectiveCategories,
+                filteredQuotes: visibleQuotes,
                 currentQuote: currentQuote,
                 isCompactHeight: isCompactHeight,
                 containerSpacing: containerSpacing,
@@ -259,21 +371,13 @@ private struct QuoteLayoutView: View {
                 calculatedQuoteFontSize: calculatedQuoteFontSize,
                 calculatedAuthorFontSize: calculatedAuthorFontSize
             )
-
-            if isCompactHeight {
-                ScrollView(.vertical, showsIndicators: false) {
-                    layout
-                        .frame(maxWidth: .infinity, alignment: .top)
-                }
-            } else {
-                layout
-                    .frame(width: size.width, height: size.height, alignment: .top)
-            }
+            .frame(width: size.width, height: size.height, alignment: .top)
         }
     }
 
     @ViewBuilder
     private func contentLayout(
+        effectiveCategories: [String]?,
         filteredQuotes: [Quote],
         currentQuote: Quote?,
         isCompactHeight: Bool,
@@ -286,9 +390,17 @@ private struct QuoteLayoutView: View {
         calculatedQuoteFontSize: CGFloat,
         calculatedAuthorFontSize: CGFloat
     ) -> some View {
-        let categoryFilter = selectedCategory == "All" ? nil : selectedCategory
+        let categoriesForNextQuote = (effectiveCategories?.isEmpty ?? true) ? nil : effectiveCategories
 
         VStack(spacing: containerSpacing) {
+            MoodSelectorView(
+                moods: moodOptions,
+                selectedMoodId: $selectedMoodId,
+                colorPack: colorPack,
+                onMoodSelected: onMoodSelected
+            )
+            .padding(.horizontal, horizontalPadding)
+
             ZStack(alignment: .top) {
                 Picker("Category", selection: $selectedCategory) {
                     ForEach(categories, id: \.self) { category in
@@ -361,7 +473,7 @@ private struct QuoteLayoutView: View {
                 .animation(.easeInOut(duration: 0.5), value: currentQuote.id)
                 .id(currentQuote.id)
                 .onTapGesture {
-                    viewModel.showNewRandomQuote(category: categoryFilter)
+                    viewModel.showNewRandomQuote(categories: categoriesForNextQuote)
                 }
                 .padding(.horizontal, horizontalPadding)
             } else if viewModel.errorMessage == nil {
@@ -423,6 +535,80 @@ private struct QuoteLayoutView: View {
         }
         .padding(.top, topPadding)
         .padding(.bottom, bottomPadding)
+    }
+}
+
+private struct MoodSelectorView: View {
+    let moods: [MoodOption]
+    @Binding var selectedMoodId: String
+    let colorPack: ThemeColorPack
+    let onMoodSelected: (MoodOption) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Image(systemName: "face.smiling")
+                    .foregroundColor(colorPack.accentColor)
+                Text("How are you feeling?")
+                    .font(.headline)
+                    .foregroundColor(.white)
+
+                if let activeMood = moods.first(where: { $0.id == selectedMoodId }) {
+                    Text(activeMood.prompt)
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.75))
+                        .lineLimit(1)
+                } else {
+                    Text("Pick a mood to tailor your feed")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.65))
+                        .lineLimit(1)
+                }
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(moods) { mood in
+                        let isSelected = mood.id == selectedMoodId
+                        Button {
+                            selectedMoodId = mood.id
+                            onMoodSelected(mood)
+                        } label: {
+                            HStack(alignment: .center, spacing: 10) {
+                                Text(mood.emoji)
+                                    .font(.title3)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(mood.title)
+                                        .font(.subheadline.bold())
+                                        .foregroundColor(.white)
+                                    Text(mood.prompt)
+                                        .font(.caption)
+                                        .foregroundColor(.white.opacity(0.78))
+                                        .lineLimit(1)
+                                }
+                            }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 12)
+                            .background(
+                                LinearGradient(
+                                    colors: mood.colors,
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                                .opacity(isSelected ? 0.95 : 0.7)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(Color.white.opacity(isSelected ? 0.42 : 0.16), lineWidth: 1)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .shadow(color: colorPack.accentColor.opacity(isSelected ? 0.3 : 0.12), radius: isSelected ? 12 : 8, x: 0, y: isSelected ? 7 : 5)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -912,3 +1098,4 @@ struct ActivityView: UIViewControllerRepresentable {
         engagementTracker: EngagementTracker(userDefaults: engagementStore)
     )
 }
+
