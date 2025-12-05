@@ -20,6 +20,12 @@ struct ContentView: View {
     @State private var hasPresentedStreakPopup = false
     @AppStorage("dailyReminderHour") private var dailyReminderHour: Int = 9
     @AppStorage("dailyReminderMinute") private var dailyReminderMinute: Int = 0
+    @AppStorage("smartMorningEnabled") private var smartMorningEnabled: Bool = true
+    @AppStorage("smartMorningHour") private var smartMorningHour: Int = 7
+    @AppStorage("smartMorningMinute") private var smartMorningMinute: Int = 0
+    @AppStorage("smartEveningEnabled") private var smartEveningEnabled: Bool = true
+    @AppStorage("smartEveningHour") private var smartEveningHour: Int = 22
+    @AppStorage("smartEveningMinute") private var smartEveningMinute: Int = 0
     @AppStorage("selectedQuoteCategory") private var selectedCategory: String = "All"
     @AppStorage("selectedThemeColorPack") private var selectedColorPackRawValue: String = ThemeColorPack.classic.rawValue
     @AppStorage("selectedFontStyle") private var selectedFontStyleRawValue: String = QuoteFontStyle.rounded.rawValue
@@ -45,6 +51,30 @@ struct ContentView: View {
         _favoritesManager = StateObject(wrappedValue: favManager)
         _engagementTracker = StateObject(wrappedValue: tracker)
         _viewModel = StateObject(wrappedValue: QuoteViewModel(favoritesManager: favManager, engagementTracker: tracker))
+    }
+
+    private func scheduleNotifications(for quote: Quote) {
+        NotificationManager.shared.scheduleDailyQuoteNotification(
+            quote: quote,
+            hour: dailyReminderHour,
+            minute: dailyReminderMinute
+        )
+
+        NotificationManager.shared.scheduleSmartNotifications(
+            quote: quote,
+            morningEnabled: smartMorningEnabled,
+            morningHour: smartMorningHour,
+            morningMinute: smartMorningMinute,
+            eveningEnabled: smartEveningEnabled,
+            eveningHour: smartEveningHour,
+            eveningMinute: smartEveningMinute
+        )
+    }
+
+    private func scheduleNotificationsIfPossible() {
+        if let dailyQuote = viewModel.getDailyQuote() {
+            scheduleNotifications(for: dailyQuote)
+        }
     }
 
     var body: some View {
@@ -118,6 +148,12 @@ struct ContentView: View {
                 SettingsView(
                     dailyReminderHour: $dailyReminderHour,
                     dailyReminderMinute: $dailyReminderMinute,
+                    smartMorningEnabled: $smartMorningEnabled,
+                    smartMorningHour: $smartMorningHour,
+                    smartMorningMinute: $smartMorningMinute,
+                    smartEveningEnabled: $smartEveningEnabled,
+                    smartEveningHour: $smartEveningHour,
+                    smartEveningMinute: $smartEveningMinute,
                     selectedThemeColorPack: $selectedColorPackRawValue,
                     selectedFontStyle: $selectedFontStyleRawValue,
                     selectedBackgroundStyle: $selectedBackgroundStyleRawValue
@@ -179,23 +215,11 @@ struct ContentView: View {
                     case .notDetermined:
                         NotificationManager.shared.requestAuthorization { granted in
                             if granted {
-                                if let dailyQuote = viewModel.getDailyQuote() {
-                                    NotificationManager.shared.scheduleDailyQuoteNotification(
-                                        quote: dailyQuote,
-                                        hour: dailyReminderHour,
-                                        minute: dailyReminderMinute
-                                    )
-                                }
+                                scheduleNotificationsIfPossible()
                             }
                         }
                     case .authorized:
-                        if let dailyQuote = viewModel.getDailyQuote() {
-                            NotificationManager.shared.scheduleDailyQuoteNotification(
-                                quote: dailyQuote,
-                                hour: dailyReminderHour,
-                                minute: dailyReminderMinute
-                            )
-                        }
+                        scheduleNotificationsIfPossible()
                     case .denied, .provisional, .ephemeral:
                         print("Notification permission not granted or restricted.")
                         break
@@ -204,6 +228,14 @@ struct ContentView: View {
                     }
                 }
             }
+            .onChange(of: dailyReminderHour) { _ in scheduleNotificationsIfPossible() }
+            .onChange(of: dailyReminderMinute) { _ in scheduleNotificationsIfPossible() }
+            .onChange(of: smartMorningEnabled) { _ in scheduleNotificationsIfPossible() }
+            .onChange(of: smartMorningHour) { _ in scheduleNotificationsIfPossible() }
+            .onChange(of: smartMorningMinute) { _ in scheduleNotificationsIfPossible() }
+            .onChange(of: smartEveningEnabled) { _ in scheduleNotificationsIfPossible() }
+            .onChange(of: smartEveningHour) { _ in scheduleNotificationsIfPossible() }
+            .onChange(of: smartEveningMinute) { _ in scheduleNotificationsIfPossible() }
         } // End NavigationStack
     } // End body
 } // End ContentView struct
@@ -795,6 +827,12 @@ struct AppearancePreviewCard: View {
 struct SettingsView: View {
     @Binding var dailyReminderHour: Int
     @Binding var dailyReminderMinute: Int
+    @Binding var smartMorningEnabled: Bool
+    @Binding var smartMorningHour: Int
+    @Binding var smartMorningMinute: Int
+    @Binding var smartEveningEnabled: Bool
+    @Binding var smartEveningHour: Int
+    @Binding var smartEveningMinute: Int
     @Binding var selectedThemeColorPack: String
     @Binding var selectedFontStyle: String
     @Binding var selectedBackgroundStyle: String
@@ -805,6 +843,20 @@ struct SettingsView: View {
         var components = DateComponents()
         components.hour = dailyReminderHour
         components.minute = dailyReminderMinute
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
+    private var morningTime: Date {
+        var components = DateComponents()
+        components.hour = smartMorningHour
+        components.minute = smartMorningMinute
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
+    private var eveningTime: Date {
+        var components = DateComponents()
+        components.hour = smartEveningHour
+        components.minute = smartEveningMinute
         return Calendar.current.date(from: components) ?? Date()
     }
 
@@ -828,6 +880,43 @@ struct SettingsView: View {
                         ),
                         displayedComponents: .hourAndMinute
                     )
+                }
+
+                Section(header: Text("Smart Notifications")) {
+                    Toggle("Morning Boost", isOn: $smartMorningEnabled)
+                    DatePicker(
+                        "Morning Time",
+                        selection: Binding(
+                            get: { morningTime },
+                            set: { newDate in
+                                let comps = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                                smartMorningHour = comps.hour ?? smartMorningHour
+                                smartMorningMinute = comps.minute ?? smartMorningMinute
+                            }
+                        ),
+                        displayedComponents: .hourAndMinute
+                    )
+                    .disabled(!smartMorningEnabled)
+
+                    Toggle("Wind Down", isOn: $smartEveningEnabled)
+                    DatePicker(
+                        "Wind Down Time",
+                        selection: Binding(
+                            get: { eveningTime },
+                            set: { newDate in
+                                let comps = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                                smartEveningHour = comps.hour ?? smartEveningHour
+                                smartEveningMinute = comps.minute ?? smartEveningMinute
+                            }
+                        ),
+                        displayedComponents: .hourAndMinute
+                    )
+                    .disabled(!smartEveningEnabled)
+
+                    Text("Pick moments when you'd like a boost or a gentle wind-down without opening the app.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 4)
                 }
 
                 Section(header: Text("Appearance")) {

@@ -16,7 +16,11 @@ class NotificationManager {
     static let shared = NotificationManager()
     private init() {}
 
-    let notificationIdentifier = "dailyQuoteNotification"
+    enum Identifier {
+        static let daily = "dailyQuoteNotification"
+        static let morningBoost = "smartMorningNotification"
+        static let windDown = "smartWindDownNotification"
+    }
 
     /// Requests notification authorization from the user.
     func requestAuthorization(completion: @escaping (Bool) -> Void) {
@@ -38,45 +42,103 @@ class NotificationManager {
 
     /// Schedules a daily notification with the given quote at the specified time.
     func scheduleDailyQuoteNotification(quote: Quote, hour: Int, minute: Int) {
+        scheduleQuoteNotification(
+            identifier: Identifier.daily,
+            title: "Daily Motivation",
+            body: "\"\(quote.quote)\" - \(quote.author)",
+            hour: hour,
+            minute: minute
+        )
+    }
+
+    /// Schedules optional "Smart" notifications (e.g., morning boost and wind down).
+    func scheduleSmartNotifications(
+        quote: Quote,
+        morningEnabled: Bool,
+        morningHour: Int,
+        morningMinute: Int,
+        eveningEnabled: Bool,
+        eveningHour: Int,
+        eveningMinute: Int
+    ) {
+        if morningEnabled {
+            scheduleQuoteNotification(
+                identifier: Identifier.morningBoost,
+                title: "Morning Boost",
+                body: "\"\(quote.quote)\" — \(quote.author)",
+                hour: morningHour,
+                minute: morningMinute
+            )
+        } else {
+            cancelNotifications(identifiers: [Identifier.morningBoost])
+        }
+
+        if eveningEnabled {
+            scheduleQuoteNotification(
+                identifier: Identifier.windDown,
+                title: "Wind Down",
+                body: "\"\(quote.quote)\" — \(quote.author)",
+                hour: eveningHour,
+                minute: eveningMinute
+            )
+        } else {
+            cancelNotifications(identifiers: [Identifier.windDown])
+        }
+    }
+
+    /// Cancels all pending and delivered quote notifications.
+    func cancelNotifications(identifiers: [String]? = nil) {
+        let center = UNUserNotificationCenter.current()
+        let ids = identifiers ?? [Identifier.daily, Identifier.morningBoost, Identifier.windDown]
+        center.removePendingNotificationRequests(withIdentifiers: ids)
+        center.removeAllDeliveredNotifications()
+#if DEBUG
+        print("Cancelled pending quote notifications: \(ids)")
+#endif
+    }
+
+    // MARK: - Private helpers
+
+    private func scheduleQuoteNotification(
+        identifier: String,
+        title: String,
+        body: String,
+        hour: Int,
+        minute: Int
+    ) {
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in
             guard settings.authorizationStatus == .authorized else {
 #if DEBUG
-                print("Cannot schedule notification: Not authorized.")
+                print("Cannot schedule notification (\(identifier)): Not authorized.")
 #endif
                 return
             }
-            let content = UNMutableNotificationContent()
-            content.title = "Daily Motivation"
-            content.body = "\"\(quote.quote)\" - \(quote.author)"
-            content.sound = UNNotificationSound.default
+
             var dateComponents = DateComponents()
             dateComponents.hour = hour
             dateComponents.minute = minute
+
+            let content = UNMutableNotificationContent()
+            content.title = title
+            content.body = body
+            content.sound = UNNotificationSound.default
+
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-            let request = UNNotificationRequest(identifier: self.notificationIdentifier, content: content, trigger: trigger)
-            center.removePendingNotificationRequests(withIdentifiers: [self.notificationIdentifier])
+            let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+
+            center.removePendingNotificationRequests(withIdentifiers: [identifier])
             center.add(request) { error in
-                if let error = error {
+                if let error {
 #if DEBUG
-                    print("Error scheduling notification: \(error.localizedDescription)")
+                    print("Error scheduling notification (\(identifier)): \(error.localizedDescription)")
 #endif
                 } else {
 #if DEBUG
-                    print("Daily notification scheduled successfully for \(hour):\(String(format: "%02d", minute)) with quote ID: \(quote.id)")
+                    print("Scheduled notification (\(identifier)) for \(hour):\(String(format: "%02d", minute))")
 #endif
                 }
             }
         }
-    }
-
-    /// Cancels all pending and delivered daily quote notifications.
-    func cancelNotifications() {
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: [notificationIdentifier])
-        center.removeAllDeliveredNotifications()
-#if DEBUG
-        print("Cancelled pending daily notifications.")
-#endif
     }
 }

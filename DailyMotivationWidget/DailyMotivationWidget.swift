@@ -2,7 +2,7 @@
 //  DailyMotivationWidget.swift
 //  DailyMotivationWidget
 //
-//  Created by Codex on 5/2/25.
+//  Created by Hung Luong on 12/5/25.
 //
 
 import WidgetKit
@@ -37,6 +37,7 @@ struct QuoteTimelineProvider: TimelineProvider {
         let quote = QuoteWidgetDataSource.shared.quote(for: now)
         let entry = QuoteWidgetEntry(date: now, quote: quote)
 
+        // Refresh on the hour to keep content fresh without spamming updates.
         let nextRefresh = Calendar.current.date(byAdding: .hour, value: 1, to: now) ?? now.addingTimeInterval(3600)
         completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
     }
@@ -49,6 +50,12 @@ struct QuoteWidgetView: View {
     let entry: QuoteWidgetEntry
 
     var body: some View {
+        content
+            .modifier(WidgetContainerBackground(family: family))
+    }
+
+    @ViewBuilder
+    private var content: some View {
         switch family {
         case .accessoryInline:
             accessoryInline
@@ -64,7 +71,7 @@ struct QuoteWidgetView: View {
     }
 
     private var standardWidget: some View {
-        ZStack {
+        return ZStack {
             LinearGradient(
                 colors: [
                     Color.blue.opacity(0.85),
@@ -73,22 +80,21 @@ struct QuoteWidgetView: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text("Daily Motivation")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.85))
-                    .padding(.bottom, 2)
+                    .foregroundStyle(.white.opacity(0.9))
                 Text("“\(entry.quote.text)”")
                     .font(.headline)
                     .foregroundStyle(.white)
                     .lineLimit(4)
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.75)
                 Text(entry.quote.author)
                     .font(.footnote.weight(.medium))
                     .foregroundStyle(.white.opacity(0.9))
                     .lineLimit(1)
             }
-            .padding()
+            .padding(16)
         }
     }
 
@@ -123,16 +129,6 @@ struct QuoteWidgetView: View {
 #endif
 }
 
-// MARK: - Widget Bundle
-
-@main
-struct DailyMotivationWidgetBundle: WidgetBundle {
-    @WidgetBundleBuilder
-    var body: some Widget {
-        DailyMotivationWidget()
-    }
-}
-
 struct DailyMotivationWidget: Widget {
     private let kind = "DailyMotivationWidget"
 
@@ -140,20 +136,13 @@ struct DailyMotivationWidget: Widget {
         StaticConfiguration(kind: kind, provider: QuoteTimelineProvider()) { entry in
             QuoteWidgetView(entry: entry)
         }
+#if os(iOS)
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryInline, .accessoryCircular])
+#else
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryInline])
+#endif
         .configurationDisplayName("Daily Motivation")
         .description("Beautiful motivation on your Home Screen and Lock Screen.")
-        .supportedFamilies(
-            [
-                .systemSmall,
-                .systemMedium,
-                .systemLarge,
-                .accessoryRectangular,
-                .accessoryInline
-#if os(iOS)
-                , .accessoryCircular
-#endif
-            ]
-        )
     }
 }
 
@@ -224,6 +213,32 @@ private extension QuoteWidgetEntry.QuoteSnapshot {
 private struct RawQuote: Decodable {
     let quote: String
     let author: String?
+}
+
+// MARK: - Background Helper
+
+private struct WidgetContainerBackground: ViewModifier {
+    let family: WidgetFamily
+    private let backgroundView = LinearGradient(
+        colors: [
+            Color.blue.opacity(0.85),
+            Color.purple.opacity(0.9)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    func body(content: Content) -> some View {
+        if #available(iOS 17.0, *) {
+            content
+                .containerBackground(for: .widget) {
+                    backgroundView
+                }
+        } else {
+            content
+                .background(backgroundView)
+        }
+    }
 }
 
 // MARK: - Preview
