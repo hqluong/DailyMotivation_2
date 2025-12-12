@@ -85,6 +85,9 @@ struct OnboardingView: View {
                         Text("Choose your focus")
                             .font(.headline)
                             .foregroundColor(.white)
+                        Text("Pick 2–3 categories to shape your daily mix.")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.8))
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 2), spacing: 10) {
                             ForEach(categories, id: \.self) { category in
                                 let isSelected = selectedCategories.contains(category)

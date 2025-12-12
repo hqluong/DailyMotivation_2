@@ -71,31 +71,56 @@ struct QuoteWidgetView: View {
     }
 
     private var standardWidget: some View {
-        return ZStack {
+        ZStack {
             LinearGradient(
                 colors: [
-                    Color.blue.opacity(0.85),
-                    Color.purple.opacity(0.9)
+                    Color(red: 0.11, green: 0.18, blue: 0.36),
+                    Color(red: 0.32, green: 0.17, blue: 0.45),
+                    Color(red: 0.93, green: 0.41, blue: 0.56)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
+            Circle()
+                .fill(Color.white.opacity(0.12))
+                .blur(radius: 40)
+                .frame(width: 180, height: 180)
+                .offset(x: -40, y: -80)
+            Circle()
+                .fill(Color.white.opacity(0.12))
+                .blur(radius: 50)
+                .frame(width: 240, height: 240)
+                .offset(x: 80, y: 120)
+
             VStack(alignment: .leading, spacing: 10) {
-                Text("Daily Motivation")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.9))
+                HStack {
+                    Label("Today's focus", systemImage: "sparkles")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white.opacity(0.9))
+                    Spacer()
+                    Text("Tap to open")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.75))
+                }
                 Text("“\(entry.quote.text)”")
                     .font(.headline)
                     .foregroundStyle(.white)
-                    .lineLimit(4)
+                    .lineLimit(3)
                     .minimumScaleFactor(0.75)
                 Text(entry.quote.author)
                     .font(.footnote.weight(.medium))
                     .foregroundStyle(.white.opacity(0.9))
                     .lineLimit(1)
+
+                HStack(spacing: 10) {
+                    actionPill(text: "Favorite", systemImage: "heart.fill")
+                    actionPill(text: "Share", systemImage: "square.and.arrow.up")
+                    Spacer()
+                }
             }
             .padding(16)
         }
+        .widgetURL(URL(string: "dailymotivation://today"))
     }
 
     private var accessoryRectangular: some View {
@@ -127,6 +152,16 @@ struct QuoteWidgetView: View {
         }
     }
 #endif
+
+    private func actionPill(text: String, systemImage: String) -> some View {
+        Label(text, systemImage: systemImage)
+            .font(.caption2.weight(.semibold))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.white.opacity(0.14))
+            .foregroundStyle(.white)
+            .clipShape(Capsule())
+    }
 }
 
 struct DailyMotivationWidget: Widget {

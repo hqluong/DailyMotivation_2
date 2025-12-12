@@ -56,6 +56,7 @@ class QuoteViewModel: ObservableObject {
         } else {
             errorMessage = nil
         }
+        favoritesManager.cleanupOrphanedFavoriteIDs(validIDs: Set(loadedQuotes.map { $0.id }))
     }
     
     // Set the current quote based on the day of the year
@@ -124,6 +125,34 @@ class QuoteViewModel: ObservableObject {
     /// Returns the full list of favorite quotes.
     func getFavoriteQuotes() -> [Quote] {
         return favoritesManager.getFavoriteQuotes(from: allQuotes)
+    }
+
+    /// Returns favorites with configurable sort and category filter.
+    func getFavoriteQuotes(
+        sortedBy sort: FavoriteSortOption,
+        filteredBy category: String?
+    ) -> [Quote] {
+        return favoritesManager.getFavoriteQuotes(
+            from: allQuotes,
+            sortedBy: sort,
+            filteredBy: category
+        )
+    }
+
+    /// All distinct categories available in the current quote list.
+    func availableCategories(includeAll: Bool = true) -> [String] {
+        let unique = Set(allQuotes.map { $0.category })
+        let base = unique.sorted()
+        return includeAll ? ["All"] + base : base
+    }
+
+    /// Count of quotes per category so we can show category density.
+    func categoryCounts() -> [String: Int] {
+        var counts: [String: Int] = [:]
+        for quote in allQuotes {
+            counts[quote.category, default: 0] += 1
+        }
+        return counts
     }
     // Inside QuoteViewModel.swift class
     

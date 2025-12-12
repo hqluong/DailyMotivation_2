@@ -18,8 +18,10 @@ struct ContentView: View {
     @State private var showingSettings = false
     @State private var showStreakPopup = false
     @State private var hasPresentedStreakPopup = false
+    @State private var showingOnboarding = false
     @AppStorage("dailyReminderHour") private var dailyReminderHour: Int = 9
     @AppStorage("dailyReminderMinute") private var dailyReminderMinute: Int = 0
+    @AppStorage("dailyReminderEnabled") private var dailyReminderEnabled: Bool = true
     @AppStorage("smartMorningEnabled") private var smartMorningEnabled: Bool = true
     @AppStorage("smartMorningHour") private var smartMorningHour: Int = 7
     @AppStorage("smartMorningMinute") private var smartMorningMinute: Int = 0
@@ -30,9 +32,18 @@ struct ContentView: View {
     @AppStorage("selectedThemeColorPack") private var selectedColorPackRawValue: String = ThemeColorPack.classic.rawValue
     @AppStorage("selectedFontStyle") private var selectedFontStyleRawValue: String = QuoteFontStyle.rounded.rawValue
     @AppStorage("selectedBackgroundStyle") private var selectedBackgroundStyleRawValue: String = QuoteBackgroundStyle.classic.rawValue
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
 
-    // Example categories - update as needed
-    private let categories: [String] = ["All", "Success", "Creativity", "Mindfulness", "Motivation", "Happiness"]
+    private let focusBlurbs: [String: String] = [
+        "Success": "Build momentum with one small win today.",
+        "Creativity": "Give your brain whitespace—capture one new idea.",
+        "Mindfulness": "Pause, breathe, and make space for what matters.",
+        "Motivation": "Take the next micro-step toward your goal.",
+        "Happiness": "Savor one bright spot; share it with someone else.",
+        "Resilience": "Lean in—setbacks are reps for your grit.",
+        "Gratitude": "Write one thank you note (even if you never send it).",
+        "Focus": "Protect 25 minutes for your most important task."
+    ]
 
     // Constants for font scaling (adjust these as needed based on testing)
     private let minQuoteFontSize: CGFloat = 18
@@ -54,11 +65,15 @@ struct ContentView: View {
     }
 
     private func scheduleNotifications(for quote: Quote) {
-        NotificationManager.shared.scheduleDailyQuoteNotification(
-            quote: quote,
-            hour: dailyReminderHour,
-            minute: dailyReminderMinute
-        )
+        if dailyReminderEnabled {
+            NotificationManager.shared.scheduleDailyQuoteNotification(
+                quote: quote,
+                hour: dailyReminderHour,
+                minute: dailyReminderMinute
+            )
+        } else {
+            NotificationManager.shared.cancelNotifications(identifiers: [NotificationManager.Identifier.daily])
+        }
 
         NotificationManager.shared.scheduleSmartNotifications(
             quote: quote,
@@ -77,12 +92,46 @@ struct ContentView: View {
         }
     }
 
+    private func availableCategories() -> [String] {
+        let dynamic = viewModel.availableCategories(includeAll: true)
+        if dynamic.count > 1 {
+            return dynamic
+        } else {
+            return ["All", "Focus", "Gratitude", "Resilience", "Success", "Mindfulness", "Creativity", "Motivation", "Happiness"]
+        }
+    }
+
+    private func categoryCountsDictionary() -> [String: Int] {
+        var counts = viewModel.categoryCounts()
+        counts["All"] = viewModel.allQuotes.count
+        return counts
+    }
+
+    private func focusLine(for quote: Quote) -> String {
+        focusBlurbs[quote.category] ?? "Lean into today's quote and take one tiny action."
+    }
+
+    private func presentStreakPopupTemporarily() {
+        guard !hasPresentedStreakPopup else { return }
+        hasPresentedStreakPopup = true
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.85, blendDuration: 0.4)) {
+            showStreakPopup = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + streakPopupDisplayDuration) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showStreakPopup = false
+            }
+        }
+    }
+
     var body: some View {
         let colorPack = ThemeColorPack(rawValue: selectedColorPackRawValue) ?? .classic
         let fontStyle = QuoteFontStyle(rawValue: selectedFontStyleRawValue) ?? .rounded
         let backgroundStyle = QuoteBackgroundStyle(rawValue: selectedBackgroundStyleRawValue) ?? .classic
         let isPhotoBackground = backgroundStyle.isPhotoBackground
         let navigationBarColorScheme = backgroundStyle.navigationBarColorScheme
+        let categories = availableCategories()
+        let categoryCounts = categoryCountsDictionary()
 
         return NavigationStack {
             ZStack {
@@ -96,6 +145,7 @@ struct ContentView: View {
                         safeAreaInsets: geometry.safeAreaInsets,
                         verticalSizeClass: verticalSizeClass,
                         categories: categories,
+                        categoryCounts: categoryCounts,
                         selectedCategory: $selectedCategory,
                         showStreakPopup: $showStreakPopup,
                         isSharePresented: $isSharePresented,
@@ -106,7 +156,17 @@ struct ContentView: View {
                         isPhotoBackground: isPhotoBackground,
                         minQuoteFontSize: minQuoteFontSize,
                         maxQuoteFontSize: maxQuoteFontSize,
-                        fontHeightScaleFactor: fontHeightScaleFactor
+                        fontHeightScaleFactor: fontHeightScaleFactor,
+                        dailyReminderEnabled: dailyReminderEnabled,
+                        dailyReminderHour: dailyReminderHour,
+                        dailyReminderMinute: dailyReminderMinute,
+                        smartMorningEnabled: smartMorningEnabled,
+                        smartMorningHour: smartMorningHour,
+                        smartMorningMinute: smartMorningMinute,
+                        smartEveningEnabled: smartEveningEnabled,
+                        smartEveningHour: smartEveningHour,
+                        smartEveningMinute: smartEveningMinute,
+                        focusLineProvider: focusLine
                     )
                 } // End GeometryReader
 
@@ -133,7 +193,11 @@ struct ContentView: View {
             }
             .navigationDestination(isPresented: $showingFavorites) {
                 // Ensure viewModel and favoritesManager are passed correctly
-                FavoritesView(viewModel: viewModel, favoritesManager: favoritesManager)
+                FavoritesView(
+                    viewModel: viewModel,
+                    favoritesManager: favoritesManager,
+                    engagementTracker: engagementTracker
+                )
             }
             .toolbarColorScheme(navigationBarColorScheme, for: .navigationBar)
             .toolbarBackground(.hidden, for: .navigationBar)
@@ -148,6 +212,7 @@ struct ContentView: View {
                 SettingsView(
                     dailyReminderHour: $dailyReminderHour,
                     dailyReminderMinute: $dailyReminderMinute,
+                    dailyReminderEnabled: $dailyReminderEnabled,
                     smartMorningEnabled: $smartMorningEnabled,
                     smartMorningHour: $smartMorningHour,
                     smartMorningMinute: $smartMorningMinute,
@@ -158,6 +223,37 @@ struct ContentView: View {
                     selectedFontStyle: $selectedFontStyleRawValue,
                     selectedBackgroundStyle: $selectedBackgroundStyleRawValue
                 )
+            }
+            .fullScreenCover(isPresented: $showingOnboarding) {
+                let onboardingCategories = availableCategories().filter { $0 != "All" }
+                OnboardingView(
+                    categories: onboardingCategories.isEmpty ? ["Focus", "Gratitude", "Resilience"] : onboardingCategories,
+                    defaultCategory: onboardingCategories.first ?? "Focus",
+                    defaultReminderHour: dailyReminderHour,
+                    defaultReminderMinute: dailyReminderMinute
+                ) { result in
+                    let chosenCategory = result.primaryCategory ?? "All"
+                    if availableCategories().contains(chosenCategory) {
+                        selectedCategory = chosenCategory
+                    } else {
+                        selectedCategory = "All"
+                    }
+                    dailyReminderHour = result.reminderHour
+                    dailyReminderMinute = result.reminderMinute
+                    dailyReminderEnabled = result.reminderEnabled
+                    hasCompletedOnboarding = true
+                    showingOnboarding = false
+                    viewModel.showNewRandomQuote(
+                        category: selectedCategory == "All" ? nil : selectedCategory
+                    )
+                    NotificationManager.shared.requestAuthorization { granted in
+                        if granted, let dailyQuote = viewModel.getDailyQuote() {
+                            scheduleNotifications(for: dailyQuote)
+                        }
+                    }
+                    presentStreakPopupTemporarily()
+                }
+                .ignoresSafeArea()
             }
             .overlay(alignment: .top) {
                 if showStreakPopup {
@@ -193,17 +289,12 @@ struct ContentView: View {
                     viewModel.setCurrentQuoteToDaily()
                 }
 
-                if !hasPresentedStreakPopup {
-                    hasPresentedStreakPopup = true
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.85, blendDuration: 0.4)) {
-                        showStreakPopup = true
+                if !hasCompletedOnboarding {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        showingOnboarding = true
                     }
-
-                    DispatchQueue.main.asyncAfter(deadline: .now() + streakPopupDisplayDuration) {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            showStreakPopup = false
-                        }
-                    }
+                } else {
+                    presentStreakPopupTemporarily()
                 }
 
                 // Record that the user viewed today's quote for streak tracking
@@ -230,6 +321,7 @@ struct ContentView: View {
             }
             .onChange(of: dailyReminderHour) { _ in scheduleNotificationsIfPossible() }
             .onChange(of: dailyReminderMinute) { _ in scheduleNotificationsIfPossible() }
+            .onChange(of: dailyReminderEnabled) { _ in scheduleNotificationsIfPossible() }
             .onChange(of: smartMorningEnabled) { _ in scheduleNotificationsIfPossible() }
             .onChange(of: smartMorningHour) { _ in scheduleNotificationsIfPossible() }
             .onChange(of: smartMorningMinute) { _ in scheduleNotificationsIfPossible() }
@@ -246,6 +338,7 @@ private struct QuoteLayoutView: View {
     let safeAreaInsets: EdgeInsets
     let verticalSizeClass: UserInterfaceSizeClass?
     let categories: [String]
+    let categoryCounts: [String: Int]
     @Binding var selectedCategory: String
     @Binding var showStreakPopup: Bool
     @Binding var isSharePresented: Bool
@@ -257,6 +350,16 @@ private struct QuoteLayoutView: View {
     let minQuoteFontSize: CGFloat
     let maxQuoteFontSize: CGFloat
     let fontHeightScaleFactor: CGFloat
+    let dailyReminderEnabled: Bool
+    let dailyReminderHour: Int
+    let dailyReminderMinute: Int
+    let smartMorningEnabled: Bool
+    let smartMorningHour: Int
+    let smartMorningMinute: Int
+    let smartEveningEnabled: Bool
+    let smartEveningHour: Int
+    let smartEveningMinute: Int
+    let focusLineProvider: (Quote) -> String
 
     var body: some View {
         let isCompactHeight = (verticalSizeClass == .compact) || size.width > size.height
@@ -322,20 +425,18 @@ private struct QuoteLayoutView: View {
         let categoryFilter = selectedCategory == "All" ? nil : selectedCategory
 
         VStack(spacing: containerSpacing) {
-            ZStack(alignment: .top) {
-                Picker("Category", selection: $selectedCategory) {
-                    ForEach(categories, id: \.self) { category in
-                        Text(category).tag(category)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, horizontalPadding)
-                .opacity(showStreakPopup ? 0 : 1)
-                .allowsHitTesting(!showStreakPopup)
-                .accessibilityHidden(showStreakPopup)
-            }
+            categoryCarousel(
+                categories: categories,
+                counts: categoryCounts,
+                horizontalPadding: horizontalPadding
+            )
+            .opacity(showStreakPopup ? 0 : 1)
+            .allowsHitTesting(!showStreakPopup)
+            .accessibilityHidden(showStreakPopup)
             .animation(.easeInOut(duration: 0.3), value: showStreakPopup)
             .frame(maxWidth: .infinity, alignment: .top)
+
+            reminderStrip(horizontalPadding: horizontalPadding)
 
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
@@ -348,7 +449,21 @@ private struct QuoteLayoutView: View {
             }
 
             if let currentQuote {
-                VStack {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Label(currentQuote.category, systemImage: "bookmark.fill")
+                            .font(.caption.bold())
+                            .foregroundColor(.white.opacity(0.9))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Capsule())
+                        Spacer()
+                        Text("Today")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+
                     ScrollView {
                         VStack(spacing: 10) {
                             Spacer(minLength: 10)
@@ -360,7 +475,12 @@ private struct QuoteLayoutView: View {
                             Text("- \(currentQuote.author)")
                                 .font(fontStyle.authorFont(size: calculatedAuthorFontSize))
                                 .foregroundColor(.white.opacity(0.85))
-                                .padding(.bottom, 5)
+                                .padding(.bottom, 2)
+                            Text(focusLineProvider(currentQuote))
+                                .font(.footnote)
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
                             Spacer(minLength: 10)
                         }
                         .frame(minHeight: quoteAreaMaxHeight * cardMinHeightMultiplier)
@@ -421,6 +541,24 @@ private struct QuoteLayoutView: View {
 
                 HStack(spacing: 20) {
                     Button {
+                        viewModel.showNewRandomQuote(category: categoryFilter)
+                    } label: {
+                        Label("Surprise me", systemImage: "sparkles")
+                            .font(.caption.bold())
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(colorPack.secondaryAccent.opacity(isPhotoBackground ? 0.1 : 0.45))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
+                    )
+
+                    Button {
                         viewModel.toggleCurrentQuoteFavorite()
                     } label: {
                         HStack(spacing: 6) {
@@ -468,6 +606,127 @@ private struct QuoteLayoutView: View {
         }
         .padding(.top, topPadding)
         .padding(.bottom, bottomPadding)
+    }
+
+    @ViewBuilder
+    private func categoryCarousel(
+        categories: [String],
+        counts: [String: Int],
+        horizontalPadding: CGFloat
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Browse categories")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(.white.opacity(0.9))
+                Spacer()
+                Text("Packs for the week")
+                    .font(.caption2)
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            .padding(.horizontal, horizontalPadding)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(categories, id: \.self) { category in
+                        let isSelected = selectedCategory == category
+                        let count = counts[category] ?? 0
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedCategory = category
+                            }
+                        } label: {
+                            HStack(spacing: 6) {
+                                Text(category)
+                                    .font(.caption.bold())
+                                if count > 0 {
+                                    Text("\(count)")
+                                        .font(.caption2.weight(.semibold))
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 4)
+                                        .background(Color.white.opacity(0.14))
+                                        .clipShape(Capsule())
+                                }
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(isSelected ? colorPack.secondaryAccent.opacity(0.35) : Color.white.opacity(0.08))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(
+                                        Color.white.opacity(isSelected ? 0.9 : 0.18),
+                                        lineWidth: isSelected ? 1.4 : 1
+                                    )
+                            )
+                        }
+                    }
+                }
+                .padding(.horizontal, horizontalPadding)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func reminderStrip(horizontalPadding: CGFloat) -> some View {
+        HStack(spacing: 10) {
+            reminderPill(
+                icon: dailyReminderEnabled ? "bell.fill" : "bell.slash",
+                text: dailyReminderEnabled
+                ? "Daily \(formatTime(hour: dailyReminderHour, minute: dailyReminderMinute))"
+                : "Daily off",
+                active: dailyReminderEnabled
+            )
+            reminderPill(
+                icon: "sunrise.fill",
+                text: smartMorningEnabled
+                ? "Morning \(formatTime(hour: smartMorningHour, minute: smartMorningMinute))"
+                : "Morning off",
+                active: smartMorningEnabled
+            )
+            reminderPill(
+                icon: "moon.stars.fill",
+                text: smartEveningEnabled
+                ? "Evening \(formatTime(hour: smartEveningHour, minute: smartEveningMinute))"
+                : "Evening off",
+                active: smartEveningEnabled
+            )
+            Spacer()
+        }
+        .padding(.horizontal, horizontalPadding)
+    }
+
+    private func reminderPill(icon: String, text: String, active: Bool) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+            Text(text)
+        }
+        .font(.caption2.weight(.semibold))
+        .foregroundColor(.white)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            Capsule(style: .continuous)
+                .fill(active ? colorPack.secondaryAccent.opacity(0.35) : Color.white.opacity(0.08))
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(Color.white.opacity(active ? 0.35 : 0.14), lineWidth: 1)
+        )
+    }
+
+    private func formatTime(hour: Int, minute: Int) -> String {
+        var comps = DateComponents()
+        comps.hour = hour
+        comps.minute = minute
+        let calendar = Calendar.current
+        let date = calendar.date(from: comps) ?? Date()
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 
@@ -840,6 +1099,7 @@ struct AppearancePreviewCard: View {
 struct SettingsView: View {
     @Binding var dailyReminderHour: Int
     @Binding var dailyReminderMinute: Int
+    @Binding var dailyReminderEnabled: Bool
     @Binding var smartMorningEnabled: Bool
     @Binding var smartMorningHour: Int
     @Binding var smartMorningMinute: Int
@@ -881,6 +1141,8 @@ struct SettingsView: View {
         return NavigationStack {
             Form {
                 Section(header: Text("Daily Reminder Time")) {
+                    Toggle("Daily reminder", isOn: $dailyReminderEnabled)
+                        .tint(.green)
                     DatePicker(
                         "Reminder Time",
                         selection: Binding(
@@ -893,6 +1155,7 @@ struct SettingsView: View {
                         ),
                         displayedComponents: .hourAndMinute
                     )
+                    .disabled(!dailyReminderEnabled)
                 }
 
                 Section(header: Text("Smart Notifications")) {
