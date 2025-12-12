@@ -250,7 +250,7 @@ private struct QuoteLayoutView: View {
     @Binding var showStreakPopup: Bool
     @Binding var isSharePresented: Bool
     @ObservedObject var viewModel: QuoteViewModel
-    let favoritesManager: FavoritesManager
+    @ObservedObject var favoritesManager: FavoritesManager
     let fontStyle: QuoteFontStyle
     let colorPack: ThemeColorPack
     let isPhotoBackground: Bool
@@ -261,8 +261,9 @@ private struct QuoteLayoutView: View {
     var body: some View {
         let isCompactHeight = (verticalSizeClass == .compact) || size.width > size.height
         let containerSpacing: CGFloat = isCompactHeight ? 12 : 20
-        let safeTopInset = isCompactHeight ? safeAreaInsets.top : 0
-        let baseTopPadding: CGFloat = isCompactHeight ? max(140, size.height * 0.26) : 12
+        // Keep content higher in all cases; ignore large safe-area insets pushing it down
+        let safeTopInset: CGFloat = 0
+        let baseTopPadding: CGFloat = isCompactHeight ? 28 : 12
         let effectiveTopPadding = baseTopPadding + safeTopInset
         let bottomPadding: CGFloat = safeAreaInsets.bottom + (isCompactHeight ? 18 : 20)
         let quoteHeightFactor: CGFloat = isCompactHeight ? 0.54 : 0.75
@@ -408,26 +409,38 @@ private struct QuoteLayoutView: View {
 
             if let quoteForButtons = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
                 let isFavorite = favoritesManager.isFavorite(quote: quoteForButtons)
+                let favoriteGradient = LinearGradient(
+                    colors: [
+                        Color(red: 1.0, green: 0.32, blue: 0.50),
+                        Color(red: 0.96, green: 0.44, blue: 0.75)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                let heartStyle: AnyShapeStyle = isFavorite ? AnyShapeStyle(favoriteGradient) : AnyShapeStyle(.white)
 
                 HStack(spacing: 20) {
                     Button {
                         viewModel.toggleCurrentQuoteFavorite()
                     } label: {
-                        Label("Favorite", systemImage: isFavorite ? "heart.fill" : "heart")
-                            .font(.caption.bold())
-                            .foregroundColor(.white)
-                            .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill((isFavorite ? Color.red : colorPack.accentColor)
-                                        .opacity(isPhotoBackground ? 0.1 : (isFavorite ? 0.8 : 0.45)))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
-                            )
+                        HStack(spacing: 6) {
+                            Image(systemName: isFavorite ? "heart.fill" : "heart")
+                                .foregroundStyle(heartStyle)
+                            Text("Favorite")
+                                .foregroundColor(.white)
+                        }
+                        .font(.caption.bold())
+                        .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(colorPack.secondaryAccent.opacity(isPhotoBackground ? 0.1 : 0.45))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
+                        )
                     }
 
                     Button {
