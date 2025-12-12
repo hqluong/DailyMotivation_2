@@ -1,0 +1,44 @@
+{
+  "configurations" : [
+    {
+      "id" : "D9AAEBC4-7A09-4514-A58A-DCB01E429D76",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "environmentVariableEntries" : [
+      {
+        "key" : "_XCWidgetKind",
+        "value" : ""
+      },
+      {
+        "key" : "_XCWidgetDefaultView",
+        "value" : "timeline"
+      },
+      {
+        "key" : "_XCWidgetFamily",
+        "value" : "systemMedium"
+      }
+    ],
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:DailyMotivation.xcodeproj",
+      "identifier" : "C76C9BB12D7D83CC004FEF31",
+      "name" : "DailyMotivation"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:DailyMotivation.xcodeproj",
+        "identifier" : "C76C9BCB2D7D83CE004FEF31",
+        "name" : "DailyMotivationUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
