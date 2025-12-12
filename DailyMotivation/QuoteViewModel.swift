@@ -122,6 +122,19 @@ class QuoteViewModel: ObservableObject {
         // The FavoritesManager will publish its changes, and views observing it will update.
     }
 
+    /// Toggles favorite for a specific quote (useful when the displayed quote differs from currentQuote).
+    @discardableResult
+    func toggleFavorite(for quote: Quote) -> Bool {
+        let isNowFavorite = favoritesManager.toggleFavorite(quote: quote)
+        if isNowFavorite {
+            engagementTracker.logQuoteFavorited()
+        }
+        if currentQuote?.id == quote.id {
+            currentQuote = quote
+        }
+        return isNowFavorite
+    }
+
     /// Returns the full list of favorite quotes.
     func getFavoriteQuotes() -> [Quote] {
         return favoritesManager.getFavoriteQuotes(from: allQuotes)
