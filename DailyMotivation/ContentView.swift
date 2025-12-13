@@ -314,87 +314,189 @@ struct ContentView: View {
         return formatter.string(from: date)
     }
 
-    var body: some View {
-        let colorPack = ThemeColorPack(rawValue: selectedColorPackRawValue) ?? .classic
-        let fontStyle = QuoteFontStyle(rawValue: selectedFontStyleRawValue) ?? .rounded
-        let backgroundStyle = QuoteBackgroundStyle(rawValue: selectedBackgroundStyleRawValue) ?? .classic
-        let isPhotoBackground = backgroundStyle.isPhotoBackground
-        let navigationBarColorScheme = backgroundStyle.navigationBarColorScheme
-        let categories = availableCategories()
-        let categoryCounts = categoryCountsDictionary()
+    // Extracted to keep body light for type-checker
+    @ViewBuilder
+    private func makeLayoutView(
+        geometry: GeometryProxy,
+        categories: [String],
+        categoryCounts: [String: Int],
+        fontStyle: QuoteFontStyle,
+        colorPack: ThemeColorPack,
+        isPhotoBackground: Bool
+    ) -> some View {
+        QuoteLayoutView(
+            size: geometry.size,
+            safeAreaInsets: geometry.safeAreaInsets,
+            verticalSizeClass: verticalSizeClass,
+            categories: categories,
+            selectedCategory: $selectedCategory,
+            showStreakPopup: $showStreakPopup,
+            isSharePresented: $isSharePresented,
+            viewModel: viewModel,
+            favoritesManager: favoritesManager,
+            noteManager: noteManager,
+            showingNoteEditor: $showingNoteEditor,
+            noteDraft: $noteDraft,
+            fontStyle: fontStyle,
+            colorPack: colorPack,
+            isPhotoBackground: isPhotoBackground,
+            minQuoteFontSize: minQuoteFontSize,
+            maxQuoteFontSize: maxQuoteFontSize,
+            fontHeightScaleFactor: fontHeightScaleFactor
+        )
+    }
 
-        return NavigationStack {
-            ZStack {
-                QuoteBackgroundView(style: backgroundStyle, colorPack: colorPack)
-                    .edgesIgnoringSafeArea(.all)
+    @ViewBuilder
+    private func buildMainView(
+        backgroundStyle: QuoteBackgroundStyle,
+        colorPack: ThemeColorPack,
+        categories: [String],
+        categoryCounts: [String: Int],
+        fontStyle: QuoteFontStyle,
+        isPhotoBackground: Bool
+    ) -> some View {
+        ZStack {
+            QuoteBackgroundView(style: backgroundStyle, colorPack: colorPack)
+                .edgesIgnoringSafeArea(.all)
 
-                // Use GeometryReader for responsive sizing
-                GeometryReader { geometry in
-                    QuoteLayoutView(
-                        size: geometry.size,
-                        safeAreaInsets: geometry.safeAreaInsets,
-                        verticalSizeClass: verticalSizeClass,
-                        categories: categories,
-                        selectedCategory: $selectedCategory,
-                        showStreakPopup: $showStreakPopup,
-                        isSharePresented: $isSharePresented,
-                        viewModel: viewModel,
-                        favoritesManager: favoritesManager,
-                        noteManager: noteManager,
-                        showingNoteEditor: $showingNoteEditor,
-                        noteDraft: $noteDraft,
-                        fontStyle: fontStyle,
-                        colorPack: colorPack,
-                        isPhotoBackground: isPhotoBackground,
-                        minQuoteFontSize: minQuoteFontSize,
-                        maxQuoteFontSize: maxQuoteFontSize,
-                        fontHeightScaleFactor: fontHeightScaleFactor
-                    )
-                } // End GeometryReader
+            GeometryReader { geometry in
+                makeLayoutView(
+                    geometry: geometry,
+                    categories: categories,
+                    categoryCounts: categoryCounts,
+                    fontStyle: fontStyle,
+                    colorPack: colorPack,
+                    isPhotoBackground: isPhotoBackground
+                )
+            }
+        }
+    }
 
-            } // End ZStack
-            .navigationTitle("Daily Motivation")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                     Button {
-                         showingFavorites = true
-                     } label: {
-                         Image(systemName: "list.star")
-                             .accessibilityLabel("Show favorite quotes")
-                     }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingEnhancements = true
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .accessibilityLabel("More options")
-                    }
-                }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        showingSettings = true
-                    } label: {
-                        Image(systemName: "gear")
-                            .accessibilityLabel("Settings")
-                    }
+    @ToolbarContentBuilder
+    private var mainToolbar: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+             Button {
+                 showingFavorites = true
+             } label: {
+                 Image(systemName: "list.star")
+                     .accessibilityLabel("Show favorite quotes")
+             }
+        }
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button {
+                showingEnhancements = true
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .accessibilityLabel("More options")
+            }
+        }
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button {
+                showingSettings = true
+            } label: {
+                Image(systemName: "gear")
+                    .accessibilityLabel("Settings")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func onboardingFlow() -> some View {
+        let onboardingCategories = availableCategories().filter { $0 != "All" }
+        OnboardingView(
+            categories: onboardingCategories.isEmpty ? ["Focus", "Gratitude", "Resilience"] : onboardingCategories,
+            defaultCategory: onboardingCategories.first ?? "Focus",
+            defaultReminderHour: dailyReminderHour,
+            defaultReminderMinute: dailyReminderMinute
+        ) { result in
+            let chosenCategory = result.primaryCategory ?? "All"
+            if availableCategories().contains(chosenCategory) {
+                selectedCategory = chosenCategory
+            } else {
+                selectedCategory = "All"
+            }
+            dailyReminderHour = result.reminderHour
+            dailyReminderMinute = result.reminderMinute
+            dailyReminderEnabled = result.reminderEnabled
+            hasCompletedOnboarding = true
+            showingOnboarding = false
+            viewModel.showNewRandomQuote(
+                category: selectedCategory == "All" ? nil : selectedCategory
+            )
+            NotificationManager.shared.requestAuthorization { granted in
+                if granted, let dailyQuote = viewModel.getDailyQuote() {
+                    scheduleNotifications(for: dailyQuote)
                 }
             }
+            presentStreakPopupTemporarily()
+        }
+        .ignoresSafeArea()
+    }
+
+    @ViewBuilder
+    private func streakOverlay(colorPack: ThemeColorPack) -> some View {
+        if showStreakPopup {
+            StreakHeaderView(summary: engagementTracker.summary, colorPack: colorPack) {
+                if let dailyQuote = viewModel.getDailyQuote() {
+                    NotificationManager.shared.scheduleDailyQuoteNotification(
+                        quote: dailyQuote,
+                        hour: dailyReminderHour,
+                        minute: dailyReminderMinute
+                    )
+                }
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    showStreakPopup = false
+                }
+                showingSettings = true
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .transition(.move(edge: .top).combined(with: .opacity))
+            .shadow(radius: 18)
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    showStreakPopup = false
+                }
+            }
+            .zIndex(1000)
+        }
+    }
+
+    var body: some View {
+        let colorPack: ThemeColorPack = ThemeColorPack(rawValue: selectedColorPackRawValue) ?? .classic
+        let fontStyle: QuoteFontStyle = QuoteFontStyle(rawValue: selectedFontStyleRawValue) ?? .rounded
+        let backgroundStyle: QuoteBackgroundStyle = QuoteBackgroundStyle(rawValue: selectedBackgroundStyleRawValue) ?? .classic
+        let isPhotoBackground: Bool = backgroundStyle.isPhotoBackground
+        let navigationBarColorScheme: ColorScheme? = backgroundStyle.navigationBarColorScheme
+        let categories: [String] = availableCategories()
+        let categoryCounts: [String: Int] = categoryCountsDictionary()
+
+        let mainContent = buildMainView(
+            backgroundStyle: backgroundStyle,
+            colorPack: colorPack,
+            categories: categories,
+            categoryCounts: categoryCounts,
+            fontStyle: fontStyle,
+            isPhotoBackground: isPhotoBackground
+        )
+
+        let contentWithNavigation = mainContent
+            .navigationTitle("Daily Motivation")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { mainToolbar }
             .navigationDestination(isPresented: $showingFavorites) {
-                // Ensure viewModel and favoritesManager are passed correctly
                 FavoritesView(
                     viewModel: viewModel,
                     favoritesManager: favoritesManager,
-                    engagementTracker: engagementTracker,
-                    noteManager: noteManager
+                    engagementTracker: engagementTracker
                 )
             }
             .toolbarColorScheme(navigationBarColorScheme, for: .navigationBar)
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbarBackground(Color.clear, for: .navigationBar)
+
+        let contentWithSheets = contentWithNavigation
             .sheet(isPresented: $isSharePresented) {
-                // Use ActivityView defined below
                 if let currentQuote = viewModel.currentQuote {
                     ActivityView(activityItems: ["\"\(currentQuote.quote)\" - \(currentQuote.author)"])
                 }
@@ -439,66 +541,15 @@ struct ContentView: View {
                 )
             }
             .fullScreenCover(isPresented: $showingOnboarding) {
-                let onboardingCategories = availableCategories().filter { $0 != "All" }
-                OnboardingView(
-                    categories: onboardingCategories.isEmpty ? ["Focus", "Gratitude", "Resilience"] : onboardingCategories,
-                    defaultCategory: onboardingCategories.first ?? "Focus",
-                    defaultReminderHour: dailyReminderHour,
-                    defaultReminderMinute: dailyReminderMinute
-                ) { result in
-                    let chosenCategory = result.primaryCategory ?? "All"
-                    if availableCategories().contains(chosenCategory) {
-                        selectedCategory = chosenCategory
-                    } else {
-                        selectedCategory = "All"
-                    }
-                    dailyReminderHour = result.reminderHour
-                    dailyReminderMinute = result.reminderMinute
-                    dailyReminderEnabled = result.reminderEnabled
-                    hasCompletedOnboarding = true
-                    showingOnboarding = false
-                    viewModel.showNewRandomQuote(
-                        category: selectedCategory == "All" ? nil : selectedCategory
-                    )
-                    NotificationManager.shared.requestAuthorization { granted in
-                        if granted, let dailyQuote = viewModel.getDailyQuote() {
-                            scheduleNotifications(for: dailyQuote)
-                        }
-                    }
-                    presentStreakPopupTemporarily()
-                }
-                .ignoresSafeArea()
+                onboardingFlow()
             }
             .overlay(alignment: .top) {
-                if showStreakPopup {
-                    StreakHeaderView(summary: engagementTracker.summary, colorPack: colorPack) {
-                        if let dailyQuote = viewModel.getDailyQuote() {
-                            NotificationManager.shared.scheduleDailyQuoteNotification(
-                                quote: dailyQuote,
-                                hour: dailyReminderHour,
-                                minute: dailyReminderMinute
-                            )
-                        }
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            showStreakPopup = false
-                        }
-                        showingSettings = true
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 12)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .shadow(radius: 18)
-                    .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            showStreakPopup = false
-                        }
-                    }
-                    .zIndex(1000)
-                }
+                streakOverlay(colorPack: colorPack)
             }
-            // --- MODIFIED .onAppear ---
+
+        NavigationStack {
+            contentWithSheets
             .onAppear {
-                // Initial quote load if needed
                 if viewModel.currentQuote == nil && viewModel.errorMessage == nil {
                     viewModel.setCurrentQuoteToDaily()
                 }
@@ -512,10 +563,8 @@ struct ContentView: View {
                     presentStreakPopupTemporarily()
                 }
 
-                // Record that the user viewed today's quote for streak tracking
                 viewModel.recordDailyQuoteView()
 
-                // --- Request and Schedule Notifications ---
                 UNUserNotificationCenter.current().getNotificationSettings { settings in
                     switch settings.authorizationStatus {
                     case .notDetermined:
@@ -544,7 +593,7 @@ struct ContentView: View {
             .onChange(of: smartEveningHour) { _ in scheduleNotificationsIfPossible() }
             .onChange(of: smartEveningMinute) { _ in scheduleNotificationsIfPossible() }
             .onChange(of: viewModel.currentQuote?.id) { _ in syncNoteDraftWithCurrentQuote() }
-        } // End NavigationStack
+        }
     } // End body
 } // End ContentView struct
 
@@ -1476,6 +1525,7 @@ private struct NoteEditorView: View {
 
     return ContentView(
         favoritesManager: FavoritesManager(userDefaults: favoritesStore),
-        engagementTracker: EngagementTracker(userDefaults: engagementStore)
+        engagementTracker: EngagementTracker(userDefaults: engagementStore),
+        noteManager: NoteManager()
     )
 }
