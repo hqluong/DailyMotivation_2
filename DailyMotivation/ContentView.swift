@@ -71,10 +71,51 @@ struct ContentView: View {
         _viewModel = StateObject(wrappedValue: QuoteViewModel(favoritesManager: favManager, engagementTracker: tracker))
     }
 
-    private func scheduleNotifications(for quote: Quote) {
+    private func preferredNotificationCategories() -> [String] {
+        var ordered: [String] = []
+        if selectedCategory != "All" {
+            ordered.append(selectedCategory)
+        }
+
+        let favoriteCategories = favoritesManager
+            .getFavoriteQuotes(from: viewModel.allQuotes)
+            .map { $0.category }
+        for category in favoriteCategories where !ordered.contains(category) {
+            ordered.append(category)
+        }
+
+        return ordered
+    }
+
+    private func buildNotificationQuotes() -> (daily: Quote, morning: Quote?, evening: Quote?)? {
+        guard let dailyQuote = viewModel.getDailyQuote() else { return nil }
+        var usedIDs: Set<UUID> = [dailyQuote.id]
+        let preferredCategories = preferredNotificationCategories()
+
+        let morningQuote = viewModel.preferredRandomQuote(
+            preferredCategories: preferredCategories,
+            excludingIDs: usedIDs
+        )
+        if let morningQuote {
+            usedIDs.insert(morningQuote.id)
+        }
+
+        let eveningQuote = viewModel.preferredRandomQuote(
+            preferredCategories: preferredCategories,
+            excludingIDs: usedIDs
+        )
+
+        return (dailyQuote, morningQuote, eveningQuote)
+    }
+
+    private func scheduleNotifications(
+        dailyQuote: Quote,
+        morningQuote: Quote?,
+        eveningQuote: Quote?
+    ) {
         if dailyReminderEnabled {
             NotificationManager.shared.scheduleDailyQuoteNotification(
-                quote: quote,
+                quote: dailyQuote,
                 hour: dailyReminderHour,
                 minute: dailyReminderMinute
             )
@@ -83,10 +124,11 @@ struct ContentView: View {
         }
 
         NotificationManager.shared.scheduleSmartNotifications(
-            quote: quote,
+            morningQuote: morningQuote,
             morningEnabled: smartMorningEnabled,
             morningHour: smartMorningHour,
             morningMinute: smartMorningMinute,
+            eveningQuote: eveningQuote,
             eveningEnabled: smartEveningEnabled,
             eveningHour: smartEveningHour,
             eveningMinute: smartEveningMinute
@@ -94,9 +136,12 @@ struct ContentView: View {
     }
 
     private func scheduleNotificationsIfPossible() {
-        if let dailyQuote = viewModel.getDailyQuote() {
-            scheduleNotifications(for: dailyQuote)
-        }
+        guard let quotes = buildNotificationQuotes() else { return }
+        scheduleNotifications(
+            dailyQuote: quotes.daily,
+            morningQuote: quotes.morning,
+            eveningQuote: quotes.evening
+        )
     }
 
     private func availableCategories() -> [String] {
@@ -424,8 +469,8 @@ struct ContentView: View {
                 category: selectedCategory == "All" ? nil : selectedCategory
             )
             NotificationManager.shared.requestAuthorization { granted in
-                if granted, let dailyQuote = viewModel.getDailyQuote() {
-                    scheduleNotifications(for: dailyQuote)
+                if granted {
+                    scheduleNotificationsIfPossible()
                 }
             }
             presentStreakPopupTemporarily()
@@ -592,6 +637,7 @@ struct ContentView: View {
             .onChange(of: smartEveningEnabled) { _ in scheduleNotificationsIfPossible() }
             .onChange(of: smartEveningHour) { _ in scheduleNotificationsIfPossible() }
             .onChange(of: smartEveningMinute) { _ in scheduleNotificationsIfPossible() }
+            .onChange(of: selectedCategory) { _ in scheduleNotificationsIfPossible() }
             .onChange(of: viewModel.currentQuote?.id) { _ in syncNoteDraftWithCurrentQuote() }
         }
     } // End body

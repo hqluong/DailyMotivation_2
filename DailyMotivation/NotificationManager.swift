@@ -53,19 +53,20 @@ class NotificationManager {
 
     /// Schedules optional "Smart" notifications (e.g., morning boost and wind down).
     func scheduleSmartNotifications(
-        quote: Quote,
+        morningQuote: Quote?,
         morningEnabled: Bool,
         morningHour: Int,
         morningMinute: Int,
+        eveningQuote: Quote?,
         eveningEnabled: Bool,
         eveningHour: Int,
         eveningMinute: Int
     ) {
-        if morningEnabled {
+        if morningEnabled, let morningQuote {
             scheduleQuoteNotification(
                 identifier: Identifier.morningBoost,
                 title: "Morning Boost",
-                body: "\"\(quote.quote)\" — \(quote.author)",
+                body: "\"\(morningQuote.quote)\" — \(morningQuote.author)",
                 hour: morningHour,
                 minute: morningMinute
             )
@@ -73,11 +74,11 @@ class NotificationManager {
             cancelNotifications(identifiers: [Identifier.morningBoost])
         }
 
-        if eveningEnabled {
+        if eveningEnabled, let eveningQuote {
             scheduleQuoteNotification(
                 identifier: Identifier.windDown,
                 title: "Wind Down",
-                body: "\"\(quote.quote)\" — \(quote.author)",
+                body: "\"\(eveningQuote.quote)\" — \(eveningQuote.author)",
                 hour: eveningHour,
                 minute: eveningMinute
             )

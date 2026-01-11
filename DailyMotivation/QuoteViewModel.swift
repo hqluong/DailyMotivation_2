@@ -105,6 +105,25 @@ class QuoteViewModel: ObservableObject {
             currentQuote = nextQuote
         }
     }
+
+    /// Picks a random quote, prioritizing preferred categories and avoiding exclusions.
+    func preferredRandomQuote(preferredCategories: [String], excludingIDs: Set<UUID> = []) -> Quote? {
+        guard !allQuotes.isEmpty else { return nil }
+        ensureSeenQuotesAreCurrent()
+
+        let exclusions = excludingIDs
+        let availableQuotes = allQuotes.filter { !exclusions.contains($0.id) }
+        guard !availableQuotes.isEmpty else { return nil }
+
+        let preferredSet = Set(preferredCategories)
+        let preferredPool = availableQuotes.filter { preferredSet.contains($0.category) }
+
+        if let preferred = nextUnseenQuote(from: preferredPool) ?? preferredPool.randomElement() {
+            return preferred
+        }
+
+        return nextUnseenQuote(from: availableQuotes) ?? availableQuotes.randomElement()
+    }
     
     // Convenience method to check if the *current* quote is a favorite
     func isCurrentQuoteFavorite() -> Bool {
