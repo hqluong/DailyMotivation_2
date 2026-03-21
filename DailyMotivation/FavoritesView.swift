@@ -19,6 +19,7 @@ struct FavoritesView: View {
 
     @State private var sortOption: FavoriteSortOption = .recent
     @State private var selectedCategory: String = "All"
+    @State private var searchText: String = ""
 
     var body: some View {
         let filterCategory = selectedCategory == "All" ? nil : selectedCategory
@@ -26,8 +27,10 @@ struct FavoritesView: View {
         let categoryOptions = ["All"] + Array(Set(allFavorites.map { $0.category })).sorted()
         let favoriteQuotes = viewModel.getFavoriteQuotes(
             sortedBy: sortOption,
-            filteredBy: filterCategory
+            filteredBy: filterCategory,
+            matching: searchText
         )
+        let isSearching = !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
         List {
             Section {
@@ -41,7 +44,7 @@ struct FavoritesView: View {
             }
 
             if favoriteQuotes.isEmpty {
-                emptyStateView()
+                emptyStateView(isSearching: isSearching)
             } else {
                 ForEach(favoriteQuotes) { quote in
                     VStack(alignment: .leading, spacing: 6) {
@@ -79,6 +82,7 @@ struct FavoritesView: View {
         }
         .listStyle(.insetGrouped)
         .navigationTitle("Favorite Quotes")
+        .searchable(text: $searchText, prompt: "Search quotes or authors")
     }
 
     @ViewBuilder
@@ -122,6 +126,7 @@ struct FavoritesView: View {
             HStack(spacing: 12) {
                 statPill(icon: "book.pages.fill", text: "\(viewedCount)/7 read")
                 statPill(icon: "heart.fill", text: "\(favoritedCount)/7 saved")
+                statPill(icon: "square.and.arrow.up.fill", text: "\(summary.shareCompletedCount) shared")
             }
 
             HStack(spacing: 12) {
@@ -134,13 +139,21 @@ struct FavoritesView: View {
     }
 
     @ViewBuilder
-    private func emptyStateView() -> some View {
+    private func emptyStateView(isSearching: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("No favorites yet")
-                .font(.headline)
-            Text("Tap the heart on any quote to save it, or use \"Surprise me\" to discover a new favorite.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            if isSearching {
+                Text("No matching favorites")
+                    .font(.headline)
+                Text("Try a different quote snippet or author name, or clear your search to see all saved quotes.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            } else {
+                Text("No favorites yet")
+                    .font(.headline)
+                Text("Tap the heart on any quote to save it, or use \"Surprise me\" to discover a new favorite.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
         }
         .padding(.vertical, 6)
     }

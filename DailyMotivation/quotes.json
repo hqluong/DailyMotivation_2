@@ -1,241 +1,1290 @@
 [
-  {"quote": "The only way to do great work is to love what you do.", "author": "Steve Jobs", "category": "Creativity"},
-  {"quote": "Success is not final, failure is not fatal: It is the courage to continue that counts.", "author": "Winston Churchill", "category": "Success"},
-  {"quote": "Believe you can and you're halfway there.", "author": "Theodore Roosevelt", "category": "Motivation"},
-  {"quote": "I can't change the direction of the wind, but I can adjust my sails to always reach my destination.", "author": "Jimmy Dean", "category": "Mindfulness"},
-  {"quote": "You are never too old to set another goal or to dream a new dream.", "author": "C.S. Lewis", "category": "Motivation"},
-  {"quote": "The best time to plant a tree was 20 years ago. The second best time is now.", "author": "Chinese Proverb", "category": "Mindfulness"},
-  {"quote": "Everything you’ve ever wanted is on the other side of fear.", "author": "George Addair", "category": "Motivation"},
-  {"quote": "Hardships often prepare ordinary people for an extraordinary destiny.", "author": "C.S. Lewis", "category": "Success"},
-  {"quote": "Believe in yourself and all that you are. Know that there is something inside you that is greater than any obstacle.", "author": "Christian D. Larson", "category": "Motivation"},
-  {"quote": "The only limit to our realization of tomorrow is our doubts of today.", "author": "Franklin D. Roosevelt", "category": "Mindfulness"},
-  {"quote": "Dream big and dare to fail.", "author": "Norman Vaughan", "category": "Creativity"},
-  {"quote": "It does not matter how slowly you go as long as you do not stop.", "author": "Confucius", "category": "Motivation"},
-  {"quote": "Act as if what you do makes a difference. It does.", "author": "William James", "category": "Happiness"},
-  {"quote": "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful.", "author": "Albert Schweitzer", "category": "Happiness"},
-  {"quote": "Your time is limited, so don’t waste it living someone else’s life.", "author": "Steve Jobs", "category": "Creativity"},
-  {"quote": "Don’t watch the clock; do what it does. Keep going.", "author": "Sam Levenson", "category": "Motivation"},
-  {"quote": "The future belongs to those who believe in the beauty of their dreams.", "author": "Eleanor Roosevelt", "category": "Creativity"},
-  {"quote": "You miss 100% of the shots you don’t take.", "author": "Wayne Gretzky", "category": "Motivation"},
-  {"quote": "Whether you think you can or you think you can’t, you’re right.", "author": "Henry Ford", "category": "Success"},
-  {"quote": "The secret of getting ahead is getting started.", "author": "Mark Twain", "category": "Success"},
-  {"quote": "It always seems impossible until it’s done.", "author": "Nelson Mandela", "category": "Motivation"},
-  {"quote": "Don’t limit your challenges. Challenge your limits.", "author": "Anonymous", "category": "Motivation"},
-  {"quote": "If you want to achieve greatness stop asking for permission.", "author": "Anonymous", "category": "Success"},
-  {"quote": "Great things never come from comfort zones.", "author": "Anonymous", "category": "Success"},
-  {"quote": "Dream it. Wish it. Do it.", "author": "Anonymous", "category": "Creativity"},
-  {"quote": "Success doesn’t just find you. You have to go out and get it.", "author": "Anonymous", "category": "Success"},
-  {"quote": "The harder you work for something, the greater you’ll feel when you achieve it.", "author": "Anonymous", "category": "Success"},
-  {"quote": "Dream bigger. Do bigger.", "author": "Anonymous", "category": "Creativity"},
-  {"quote": "Don’t stop when you’re tired. Stop when you’re done.", "author": "Anonymous", "category": "Motivation"},
-  {"quote": "Wake up with determination. Go to bed with satisfaction.", "author": "Anonymous", "category": "Motivation"},
-  {"quote": "Do something today that your future self will thank you for.", "author": "Anonymous", "category": "Mindfulness"},
-  {"quote": "Little things make big days.", "author": "Anonymous", "category": "Happiness"},
-  {"quote": "It’s going to be hard, but hard does not mean impossible.", "author": "Anonymous", "category": "Motivation"},
-  {"quote": "Don’t wait for opportunity. Create it.", "author": "Anonymous", "category": "Creativity"},
-  {"quote": "Sometimes we’re tested not to show our weaknesses, but to discover our strengths.", "author": "Anonymous", "category": "Mindfulness"},
-  {"quote": "The key to success is to focus on goals, not obstacles.", "author": "Anonymous", "category": "Success"},
-  {"quote": "Dream, believe, build, and achieve.", "author": "Anonymous", "category": "Motivation"},
-  {"quote": "If you believe it will work out, you'll see opportunities. If you believe it won't, you will see obstacles.", "author": "Anonymous", "category": "Mindfulness"},
-  {"quote": "Stay positive, work hard, make it happen.", "author": "Anonymous", "category": "Happiness"},
-  {"quote": "Keep your face always toward the sunshine—and shadows will fall behind you.", "author": "Walt Whitman"},
-  {"quote": "Success is the sum of small efforts, repeated day in and day out.", "author": "Robert Collier"},
-  {"quote": "Don’t count the days, make the days count.", "author": "Muhammad Ali"},
-  {"quote": "You don’t have to be great to start, but you have to start to be great.", "author": "Zig Ziglar"},
-  {"quote": "Do what you can with all you have, wherever you are.", "author": "Theodore Roosevelt"},
-  {"quote": "You are capable of amazing things.", "author": "Anonymous"},
-  {"quote": "Push yourself, because no one else is going to do it for you.", "author": "Anonymous"},
-  {"quote": "The pain you feel today will be the strength you feel tomorrow.", "author": "Anonymous"},
-  {"quote": "Everything you need is already inside you.", "author": "Anonymous"},
-  {"quote": "Doubt kills more dreams than failure ever will.", "author": "Suzy Kassem"},
-  {"quote": "Don't be pushed around by the fears in your mind. Be led by the dreams in your heart.", "author": "Roy T. Bennett"},
-  {"quote": "Work hard in silence, let success be your noise.", "author": "Frank Ocean"},
-  {"quote": "The only way to achieve the impossible is to believe it is possible.", "author": "Charles Kingsleigh"},
-  {"quote": "Fall seven times, stand up eight.", "author": "Japanese Proverb"},
-  {"quote": "Opportunities don't happen, you create them.", "author": "Chris Grosser"},
-  {"quote": "Success isn’t always about greatness. It’s about consistency.", "author": "Dwayne Johnson"},
-  {"quote": "You are stronger than you think.", "author": "Anonymous"},
-  {"quote": "The best revenge is massive success.", "author": "Frank Sinatra"},
-  {"quote": "Turn your wounds into wisdom.", "author": "Oprah Winfrey"},
-  {"quote": "Keep going. Everything you need will come to you at the perfect time.", "author": "Anonymous"},
-  {"quote": "Your limitation—it's only your imagination.", "author": "Anonymous"},
-  {"quote": "Creativity is intelligence having fun.", "author": "Albert Einstein"},
-  {"quote": "Do one thing every day that scares you.", "author": "Eleanor Roosevelt"},
-  {"quote": "It’s not whether you get knocked down, it’s whether you get up.", "author": "Vince Lombardi"},
-  {"quote": "If you can dream it, you can do it.", "author": "Walt Disney"},
-  {"quote": "Don’t let yesterday take up too much of today.", "author": "Will Rogers"},
-  {"quote": "Strive not to be a success, but rather to be of value.", "author": "Albert Einstein"},
-  {"quote": "I attribute my success to this: I never gave or took any excuse.", "author": "Florence Nightingale"},
-  {"quote": "You can either experience the pain of discipline or the pain of regret.", "author": "Jim Rohn"},
-  {"quote": "The only person you are destined to become is the person you decide to be.", "author": "Ralph Waldo Emerson"},
-  {"quote": "Go the extra mile, it’s never crowded.", "author": "Wayne Dyer"},
-  {"quote": "The future depends on what you do today.", "author": "Mahatma Gandhi"},
-  {"quote": "Don’t be afraid to give up the good to go for the great.", "author": "John D. Rockefeller"},
-  {"quote": "If you are not willing to risk the usual, you will have to settle for the ordinary.", "author": "Jim Rohn"},
-  {"quote": "Believe in yourself, take on your challenges, dig deep within yourself to conquer fears.", "author": "Chantal Sutherland"},
-  {"quote": "Start where you are. Use what you have. Do what you can.", "author": "Arthur Ashe"},
-  {"quote": "The way to get started is to quit talking and begin doing.", "author": "Walt Disney"},
-  {"quote": "Success is walking from failure to failure with no loss of enthusiasm.", "author": "Winston Churchill"},
-  {"quote": "You’ve got to get up every morning with determination if you’re going to go to bed with satisfaction.", "author": "George Lorimer"},
-  {"quote": "Your positive action combined with positive thinking results in success.", "author": "Shiv Khera"},
-  {"quote": "A champion is defined not by their wins but by how they recover when they fall.", "author": "Serena Williams"},
-  {"quote": "To succeed in life, you need two things: ignorance and confidence.", "author": "Mark Twain"},
-  {"quote": "If you want to fly, give up everything that weighs you down.", "author": "Buddha"},
-  {"quote": "A year from now you may wish you had started today.", "author": "Karen Lamb"},
-  {"quote": "Don’t let the fear of losing be greater than the excitement of winning.", "author": "Robert Kiyosaki"},
-  {"quote": "The only thing standing between you and your goal is the story you keep telling yourself.", "author": "Jordan Belfort"},
-  {"quote": "Believe and act as if it were impossible to fail.", "author": "Charles Kettering"},
-  {"quote": "The secret of success is to do the common thing uncommonly well.", "author": "John D. Rockefeller Jr."},
-  {"quote": "Everything you’ve ever wanted is on the other side of fear.", "author": "George Addair"},
-  {"quote": "Success usually comes to those who are too busy to be looking for it.", "author": "Henry David Thoreau"},
-  {"quote": "Don't wish it were easier. Wish you were better.", "author": "Jim Rohn"},
-  {"quote": "The harder I work, the luckier I get.", "author": "Thomas Jefferson"},
-  {"quote": "Opportunities don't happen. You create them.", "author": "Chris Grosser"},
-  {"quote": "Don't wait. The time will never be just right.", "author": "Napoleon Hill"},
-  {"quote": "You are your only limit.", "author": "Unknown"},
-  {"quote": "Doubt is a killer. You just have to know who you are and what you stand for.", "author": "Jennifer Lopez"},
-  {"quote": "The only place where success comes before work is in the dictionary.", "author": "Vidal Sassoon"},
-  {"quote": "Don’t let small minds convince you that your dreams are too big.", "author": "Unknown"},
-  {"quote": "If you want something you never had, you have to do something you’ve never done.", "author": "Thomas Jefferson"},
-  {"quote": "You are the master of your destiny.", "author": "Napoleon Hill"},
-  {"quote": "Don’t stop until you’re proud.", "author": "Unknown"},
-  {"quote": "The best dreams happen when you’re awake.", "author": "Cherie Gilderbloom"},
-  {"quote": "You are the CEO of your own life.", "author": "Unknown"},
-  {"quote": "Don’t be afraid to fail. Be afraid not to try.", "author": "Unknown"},
-  {"quote": "The only thing that can stop you is you.", "author": "Unknown"},
-  {"quote": "Don’t let fear decide your future.", "author": "Shalane Flanagan"},
-  {"quote": "You are the author of your own story.", "author": "Unknown"},
-  {"quote": "Don’t let anyone dull your sparkle.", "author": "Unknown"},
-  {"quote": "The only way to finish is to start.", "author": "Unknown"},
-  {"quote": "Don’t be afraid to shine.", "author": "Unknown"},
-  {"quote": "You are the sky. Everything else is just the weather.", "author": "Pema Chödrön"},
-  {"quote": "Don’t let your dreams be dreams.", "author": "Jack Johnson"},
-  {"quote": "The only thing that stands between you and your dream is the will to try and the belief that it is actually possible.", "author": "Joel Brown"},
-  {"quote": "Don’t be afraid to be great.", "author": "Unknown"},
-  {"quote": "You are the light of the world.", "author": "Matthew 5:14"},
-  {"quote": "Don’t let your fears decide your fate.", "author": "Unknown"},
-  {"quote": "The only thing that limits you is your imagination.", "author": "Unknown"},
-  {"quote": "Don’t be afraid to take risks.", "author": "Unknown"},
-  {"quote": "You are the hero of your own story.", "author": "Unknown"},
-  {"quote": "Don’t let your past define your future.", "author": "Unknown"},
-  {"quote": "The only way to predict the future is to create it.", "author": "Abraham Lincoln"},
-  {"quote": "Don’t be afraid to dream big.", "author": "Unknown"},
-  {"quote": "You are the change you wish to see in the world.", "author": "Mahatma Gandhi"},
-  {"quote": "Don’t let your circumstances define you.", "author": "Unknown"},
-  {"quote": "The only thing that matters is what you do now.", "author": "Unknown"},
-  {"quote": "Don’t be afraid to be yourself.", "author": "Unknown"},
-  {"quote": "You are the reason someone smiles today.", "author": "Unknown"},
-  {"quote": "Don’t let your doubts stop you.", "author": "Unknown"},
-  {"quote": "Don’t let your fears hold you back.", "author": "Unknown"},
-  {"quote": "You are the architect of your own destiny.", "author": "Unknown"},
-  {"quote": "Don’t let your failures define you.", "author": "Unknown"},
-  {"quote": "You are the light at the end of the tunnel.", "author": "Unknown"},
-  {"quote": "Don’t let your fears win.", "author": "Unknown"},
-  {"quote": "Don’t let your past hold you back.", "author": "Unknown"},
-  {"quote": "You are the captain of your own ship.", "author": "Unknown"},
-  {"quote": "Don’t let your dreams die.", "author": "Unknown"},
-  {"quote": "The only thing that separates success from failure is one last try.", "author": "Unknown"},
-  {"quote": "Don’t let your fears stop you from achieving your dreams.", "author": "Unknown"},
-  {"quote": "You are the key to your own success.", "author": "Unknown"},
-  {"quote": "Don’t let your doubts win.", "author": "Unknown"},
-  {"quote": "What you do today can improve all your tomorrows.", "author": "Ralph Marston", "category": "Motivation"},
-  {"quote": "Success seems to be largely a matter of hanging on after others have let go.", "author": "William Feather", "category": "Success"},
-  {"quote": "Start by doing what's necessary; then do what's possible; and suddenly you are doing the impossible.", "author": "Francis of Assisi", "category": "Motivation"},
-  {"quote": "In the middle of every difficulty lies opportunity.", "author": "Albert Einstein", "category": "Motivation"},
-  {"quote": "The man who moves a mountain begins by carrying away small stones.", "author": "Confucius", "category": "Mindfulness"},
-  {"quote": "Quality is not an act, it is a habit.", "author": "Aristotle", "category": "Success"},
-  {"quote": "Failure will never overtake me if my determination to succeed is strong enough.", "author": "Og Mandino", "category": "Motivation"},
-  {"quote": "Discipline is the bridge between goals and accomplishment.", "author": "Jim Rohn", "category": "Success"},
-  {"quote": "A goal is a dream with a deadline.", "author": "Napoleon Hill", "category": "Motivation"},
-  {"quote": "Courage doesn't always roar. Sometimes courage is the quiet voice at the end of the day saying, 'I will try again tomorrow.'", "author": "Mary Anne Radmacher", "category": "Mindfulness"},
-  {"quote": "Perseverance is not a long race; it is many short races one after the other.", "author": "Walter Elliot", "category": "Success"},
-  {"quote": "Do what you can, with what you have, where you are.", "author": "Theodore Roosevelt", "category": "Motivation"},
-  {"quote": "You must do the things you think you cannot do.", "author": "Eleanor Roosevelt", "category": "Motivation"},
-  {"quote": "If it doesn't challenge you, it won't change you.", "author": "Fred DeVito", "category": "Motivation"},
-  {"quote": "The harder the conflict, the greater the triumph.", "author": "George Washington", "category": "Success"},
-  {"quote": "Keep your face always toward the sunshine and shadows will fall behind you.", "author": "Walt Whitman", "category": "Happiness"},
-  {"quote": "You can't build a reputation on what you are going to do.", "author": "Henry Ford", "category": "Success"},
-  {"quote": "Happiness is not something ready made. It comes from your own actions.", "author": "Dalai Lama", "category": "Happiness"},
-  {"quote": "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", "author": "Will Durant", "category": "Success"},
-  {"quote": "When you reach the end of your rope, tie a knot in it and hang on.", "author": "Franklin D. Roosevelt", "category": "Motivation"},
-  {"quote": "Rise above the storm and you will find the sunshine.", "author": "Mario Fernandez", "category": "Mindfulness"},
-  {"quote": "Energy and persistence conquer all things.", "author": "Benjamin Franklin", "category": "Motivation"},
-  {"quote": "Breathe. Let go. And remind yourself that this very moment is the only one you know you have for sure.", "author": "Oprah Winfrey", "category": "Mindfulness"},
-  {"quote": "The big lesson in life is never be scared of anyone or anything.", "author": "Frank Sinatra", "category": "Motivation"},
-  {"quote": "Creativity involves breaking out of expected patterns so you can look at things in a different way.", "author": "Edward de Bono", "category": "Creativity"},
-  {"quote": "To live a creative life, we must lose our fear of being wrong.", "author": "Joseph Chilton Pearce", "category": "Creativity"},
-  {"quote": "Every artist was first an amateur.", "author": "Ralph Waldo Emerson", "category": "Creativity"},
-  {"quote": "What you get by achieving your goals is not as important as what you become by achieving your goals.", "author": "Zig Ziglar", "category": "Motivation"},
-  {"quote": "Success is getting what you want, happiness is wanting what you get.", "author": "W. P. Kinsella", "category": "Happiness"},
-  {"quote": "The mind is everything. What you think you become.", "author": "Buddha", "category": "Mindfulness"},
-  {"quote": "Keep your eyes on the stars, and your feet on the ground.", "author": "Theodore Roosevelt", "category": "Motivation"},
-  {"quote": "Action is the foundational key to all success.", "author": "Pablo Picasso", "category": "Success"},
-  {"quote": "You don't have to be great to start, but you have to start to be great.", "author": "Zig Ziglar", "category": "Motivation"},
-  {"quote": "A river cuts through rock not because of its power, but because of its persistence.", "author": "James N. Watkins", "category": "Motivation"},
-  {"quote": "It is never too late to be what you might have been.", "author": "George Eliot", "category": "Motivation"},
-  {"quote": "Motivation gets you going and habit gets you there.", "author": "Zig Ziglar", "category": "Motivation"},
-  {"quote": "Success is liking yourself, liking what you do, and liking how you do it.", "author": "Maya Angelou", "category": "Success"},
-  {"quote": "Happiness is not by chance, but by choice.", "author": "Jim Rohn", "category": "Happiness"},
-  {"quote": "The greatest weapon against stress is our ability to choose one thought over another.", "author": "William James", "category": "Mindfulness"},
-  {"quote": "Joy is not in things; it is in us.", "author": "Richard Wagner", "category": "Happiness"},
-  {"quote": "A calm mind brings inner strength and self-confidence.", "author": "Dalai Lama", "category": "Mindfulness"},
-  {"quote": "The simple act of paying attention can take you a long way.", "author": "Keanu Reeves", "category": "Mindfulness"},
-  {"quote": "Success is how high you bounce when you hit bottom.", "author": "George S. Patton", "category": "Success"},
-  {"quote": "He who is not courageous enough to take risks will accomplish nothing in life.", "author": "Muhammad Ali", "category": "Motivation"},
-  {"quote": "If you hear a voice within you say you cannot paint, then by all means paint and that voice will be silenced.", "author": "Vincent van Gogh", "category": "Creativity"},
-  {"quote": "Make each day your masterpiece.", "author": "John Wooden", "category": "Motivation"},
-  {"quote": "The difference between ordinary and extraordinary is that little extra.", "author": "Jimmy Johnson", "category": "Motivation"},
-  {"quote": "A champion is defined not by their wins but by how they can recover when they fall.", "author": "Serena Williams", "category": "Success"},
-  {"quote": "You become what you believe.", "author": "Oprah Winfrey", "category": "Motivation"},
-  {"quote": "The miracle is not that we do this work, but that we are happy to do it.", "author": "Mother Teresa", "category": "Happiness"},
-  {"quote": "Patience is not the ability to wait, but how you act while you're waiting.", "author": "Joyce Meyer", "category": "Mindfulness"},
-  {"quote": "The more you praise and celebrate your life, the more there is in life to celebrate.", "author": "Oprah Winfrey", "category": "Happiness"},
-  {"quote": "Success demands singleness of purpose.", "author": "Vince Lombardi", "category": "Success"},
-  {"quote": "If you're not willing to risk the usual, you will have to settle for the ordinary.", "author": "Jim Rohn", "category": "Success"},
-  {"quote": "Focus on being productive instead of busy.", "author": "Tim Ferriss", "category": "Motivation"},
-  {"quote": "Everything you can imagine is real.", "author": "Pablo Picasso", "category": "Creativity"},
-  {"quote": "Success is not in what you have, but who you are.", "author": "Bo Bennett", "category": "Success"},
-  {"quote": "Once you choose hope, anything's possible.", "author": "Christopher Reeve", "category": "Motivation"},
-  {"quote": "Happiness is the highest form of health.", "author": "Dalai Lama", "category": "Happiness"},
-  {"quote": "Slow down and everything you are chasing will come around and catch you.", "author": "John De Paola", "category": "Mindfulness"},
-  {"quote": "Great things are done by a series of small things brought together.", "author": "Vincent van Gogh", "category": "Creativity"},
-  {"quote": "Success is a state of mind. If you want success, start thinking of yourself as a success.", "author": "Joyce Brothers", "category": "Success"},
-  {"quote": "Dreams don't work unless you do.", "author": "John C. Maxwell", "category": "Motivation"},
-  {"quote": "Achievement seems to be connected with action. Successful men keep moving. They make mistakes, but they don't quit.", "author": "Conrad Hilton", "category": "Success"},
-  {"quote": "Fear is a reaction. Courage is a decision.", "author": "Winston Churchill", "category": "Motivation"},
-  {"quote": "Stay hungry, stay foolish.", "author": "Stewart Brand", "category": "Creativity"},
-  {"quote": "Life is 10% what happens to us and 90% how we react to it.", "author": "Charles R. Swindoll", "category": "Mindfulness"},
-  {"quote": "Live life to the fullest, and focus on the positive.", "author": "Matt Cameron", "category": "Happiness"},
-  {"quote": "Success is peace of mind that results from knowing you did your best.", "author": "John Wooden", "category": "Success"},
-  {"quote": "Be so good they can't ignore you.", "author": "Steve Martin", "category": "Creativity"},
-  {"quote": "Amateurs sit and wait for inspiration, the rest of us just get up and go to work.", "author": "Stephen King", "category": "Creativity"},
-  {"quote": "Peace comes from within. Do not seek it without.", "author": "Buddha", "category": "Mindfulness"},
-  {"quote": "Happiness is a direction, not a place.", "author": "Sydney J. Harris", "category": "Happiness"},
-  {"quote": "Motivation is what gets you started. Habit is what keeps you going.", "author": "Jim Ryun", "category": "Motivation"},
-  {"quote": "If you want to lift yourself up, lift up someone else.", "author": "Booker T. Washington", "category": "Happiness"},
-  {"quote": "To accomplish great things, we must not only act, but also dream; not only plan, but also believe.", "author": "Anatole France", "category": "Motivation"},
-  {"quote": "Happiness is when what you think, what you say, and what you do are in harmony.", "author": "Mahatma Gandhi", "category": "Happiness"},
-  {"quote": "Small daily improvements over time lead to stunning results.", "author": "Robin Sharma", "category": "Success"},
-  {"quote": "It is during our darkest moments that we must focus to see the light.", "author": "Aristotle", "category": "Mindfulness"},
-  {"quote": "The more difficult the victory, the greater the happiness in winning.", "author": "Pele", "category": "Success"},
-  {"quote": "Do not wait to strike till the iron is hot; but make it hot by striking.", "author": "William Butler Yeats", "category": "Motivation"},
-  {"quote": "Happiness often sneaks in through a door you didn't know you left open.", "author": "John Barrymore", "category": "Happiness"},
-  {"quote": "Mindfulness isn't difficult, we just need to remember to do it.", "author": "Sharon Salzberg", "category": "Mindfulness"},
-  {"quote": "The most effective way to do it, is to do it.", "author": "Amelia Earhart", "category": "Motivation"},
-  {"quote": "The only journey is the one within.", "author": "Rainer Maria Rilke", "category": "Mindfulness"},
-  {"quote": "Success isn't about the end result, it's about what you learn along the way.", "author": "Vera Wang", "category": "Success"},
-  {"quote": "The best way to pay for a lovely moment is to enjoy it.", "author": "Richard Bach", "category": "Mindfulness"},
-  {"quote": "Creativity takes courage.", "author": "Henri Matisse", "category": "Creativity"},
-  {"quote": "Your life does not get better by chance, it gets better by change.", "author": "Jim Rohn", "category": "Motivation"},
-  {"quote": "I never dreamed about success. I worked for it.", "author": "Estée Lauder", "category": "Success"},
-  {"quote": "Success is not how high you have climbed, but how you make a positive difference to the world.", "author": "Roy T. Bennett", "category": "Success"},
-  {"quote": "Happiness is a warm puppy.", "author": "Charles M. Schulz", "category": "Happiness"},
-  {"quote": "What lies behind us and what lies before us are tiny matters compared to what lies within us.", "author": "Ralph Waldo Emerson", "category": "Motivation"},
-  {"quote": "The most wasted of all days is one without laughter.", "author": "Nicolas Chamfort", "category": "Happiness"},
-  {"quote": "Starve your distractions, feed your focus.", "author": "Unknown", "category": "Motivation"},
-  {"quote": "Creativity is seeing what everyone else has seen, and thinking what no one else has thought.", "author": "Albert Szent-Gyorgyi", "category": "Creativity"},
-  {"quote": "Silence isn't empty, it's full of answers.", "author": "Unknown", "category": "Mindfulness"},
-  {"quote": "Let perseverance be your engine and hope your fuel.", "author": "H. Jackson Brown Jr.", "category": "Motivation"},
-  {"quote": "Success is achieved and maintained by those who try and keep trying.", "author": "W. Clement Stone", "category": "Success"},
-  {"quote": "Your present circumstances don't determine where you can go; they merely determine where you start.", "author": "Nido Qubein", "category": "Motivation"}
+  {
+    "quote": "The only way to do great work is to love what you do.",
+    "author": "Steve Jobs",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Success is not final, failure is not fatal: It is the courage to continue that counts.",
+    "author": "Winston Churchill",
+    "category": "Success"
+  },
+  {
+    "quote": "Believe you can and you're halfway there.",
+    "author": "Theodore Roosevelt",
+    "category": "Motivation"
+  },
+  {
+    "quote": "I can't change the direction of the wind, but I can adjust my sails to always reach my destination.",
+    "author": "Jimmy Dean",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "You are never too old to set another goal or to dream a new dream.",
+    "author": "C.S. Lewis",
+    "category": "Motivation"
+  },
+  {
+    "quote": "The best time to plant a tree was 20 years ago. The second best time is now.",
+    "author": "Chinese Proverb",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Everything you’ve ever wanted is on the other side of fear.",
+    "author": "George Addair",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Hardships often prepare ordinary people for an extraordinary destiny.",
+    "author": "C.S. Lewis",
+    "category": "Success"
+  },
+  {
+    "quote": "Believe in yourself and all that you are. Know that there is something inside you that is greater than any obstacle.",
+    "author": "Christian D. Larson",
+    "category": "Motivation"
+  },
+  {
+    "quote": "The only limit to our realization of tomorrow is our doubts of today.",
+    "author": "Franklin D. Roosevelt",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Dream big and dare to fail.",
+    "author": "Norman Vaughan",
+    "category": "Creativity"
+  },
+  {
+    "quote": "It does not matter how slowly you go as long as you do not stop.",
+    "author": "Confucius",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Act as if what you do makes a difference. It does.",
+    "author": "William James",
+    "category": "Happiness"
+  },
+  {
+    "quote": "Success is not the key to happiness. Happiness is the key to success. If you love what you are doing, you will be successful.",
+    "author": "Albert Schweitzer",
+    "category": "Happiness"
+  },
+  {
+    "quote": "Your time is limited, so don’t waste it living someone else’s life.",
+    "author": "Steve Jobs",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Don’t watch the clock; do what it does. Keep going.",
+    "author": "Sam Levenson",
+    "category": "Motivation"
+  },
+  {
+    "quote": "The future belongs to those who believe in the beauty of their dreams.",
+    "author": "Eleanor Roosevelt",
+    "category": "Creativity"
+  },
+  {
+    "quote": "You miss 100% of the shots you don’t take.",
+    "author": "Wayne Gretzky",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Whether you think you can or you think you can’t, you’re right.",
+    "author": "Henry Ford",
+    "category": "Success"
+  },
+  {
+    "quote": "The secret of getting ahead is getting started.",
+    "author": "Mark Twain",
+    "category": "Success"
+  },
+  {
+    "quote": "It always seems impossible until it’s done.",
+    "author": "Nelson Mandela",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Don’t limit your challenges. Challenge your limits.",
+    "author": "Anonymous",
+    "category": "Motivation"
+  },
+  {
+    "quote": "If you want to achieve greatness stop asking for permission.",
+    "author": "Anonymous",
+    "category": "Success"
+  },
+  {
+    "quote": "Great things never come from comfort zones.",
+    "author": "Anonymous",
+    "category": "Success"
+  },
+  {
+    "quote": "Dream it. Wish it. Do it.",
+    "author": "Anonymous",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Success doesn’t just find you. You have to go out and get it.",
+    "author": "Anonymous",
+    "category": "Success"
+  },
+  {
+    "quote": "The harder you work for something, the greater you’ll feel when you achieve it.",
+    "author": "Anonymous",
+    "category": "Success"
+  },
+  {
+    "quote": "Dream bigger. Do bigger.",
+    "author": "Anonymous",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Don’t stop when you’re tired. Stop when you’re done.",
+    "author": "Anonymous",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Wake up with determination. Go to bed with satisfaction.",
+    "author": "Anonymous",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Do something today that your future self will thank you for.",
+    "author": "Anonymous",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Little things make big days.",
+    "author": "Anonymous",
+    "category": "Happiness"
+  },
+  {
+    "quote": "It’s going to be hard, but hard does not mean impossible.",
+    "author": "Anonymous",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Don’t wait for opportunity. Create it.",
+    "author": "Anonymous",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Sometimes we’re tested not to show our weaknesses, but to discover our strengths.",
+    "author": "Anonymous",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "The key to success is to focus on goals, not obstacles.",
+    "author": "Anonymous",
+    "category": "Success"
+  },
+  {
+    "quote": "Dream, believe, build, and achieve.",
+    "author": "Anonymous",
+    "category": "Motivation"
+  },
+  {
+    "quote": "If you believe it will work out, you'll see opportunities. If you believe it won't, you will see obstacles.",
+    "author": "Anonymous",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Stay positive, work hard, make it happen.",
+    "author": "Anonymous",
+    "category": "Happiness"
+  },
+  {
+    "id": "59b4b9da-7755-518c-98e8-b2011aee02fc",
+    "quote": "Keep your face always toward the sunshine—and shadows will fall behind you.",
+    "author": "Walt Whitman",
+    "category": "Happiness"
+  },
+  {
+    "id": "56a71860-362c-5ccd-a4cf-64b7ad0ef2fd",
+    "quote": "Success is the sum of small efforts, repeated day in and day out.",
+    "author": "Robert Collier",
+    "category": "Success"
+  },
+  {
+    "id": "8ca8baf2-9b23-5b4d-861f-c8589ab4349d",
+    "quote": "Don’t count the days, make the days count.",
+    "author": "Muhammad Ali",
+    "category": "Focus"
+  },
+  {
+    "id": "4d6ff275-2e69-5afb-a2b8-8cb54f17d0eb",
+    "quote": "You don’t have to be great to start, but you have to start to be great.",
+    "author": "Zig Ziglar",
+    "category": "Motivation"
+  },
+  {
+    "id": "e34f4d58-c317-5f85-b57a-56cbe00eb475",
+    "quote": "Do what you can with all you have, wherever you are.",
+    "author": "Theodore Roosevelt",
+    "category": "Motivation"
+  },
+  {
+    "id": "05b37943-7b28-59e0-83eb-0b728427a9f0",
+    "quote": "You are capable of amazing things.",
+    "author": "Anonymous",
+    "category": "Motivation"
+  },
+  {
+    "id": "3dd0e07a-5c4a-5e3a-b05d-ccd7a9bd764a",
+    "quote": "Push yourself, because no one else is going to do it for you.",
+    "author": "Anonymous",
+    "category": "Motivation"
+  },
+  {
+    "id": "02f4c1ae-280e-55b2-bf2f-ab6018377e42",
+    "quote": "The pain you feel today will be the strength you feel tomorrow.",
+    "author": "Anonymous",
+    "category": "Resilience"
+  },
+  {
+    "id": "442120ba-aa36-5739-bf8e-b731bb933029",
+    "quote": "Everything you need is already inside you.",
+    "author": "Anonymous",
+    "category": "Resilience"
+  },
+  {
+    "id": "8ff57984-1635-562d-b175-b7aeb52a675d",
+    "quote": "Doubt kills more dreams than failure ever will.",
+    "author": "Suzy Kassem",
+    "category": "Resilience"
+  },
+  {
+    "id": "8a5ed440-7ab4-579b-a9e9-c7b34b7a6bcb",
+    "quote": "Don't be pushed around by the fears in your mind. Be led by the dreams in your heart.",
+    "author": "Roy T. Bennett",
+    "category": "Mindfulness"
+  },
+  {
+    "id": "ec19ae86-2a6d-54d7-b950-321e571b77e7",
+    "quote": "Work hard in silence, let success be your noise.",
+    "author": "Frank Ocean",
+    "category": "Success"
+  },
+  {
+    "id": "512ab1a4-f4d6-5529-8654-3371c67980f9",
+    "quote": "The only way to achieve the impossible is to believe it is possible.",
+    "author": "Charles Kingsleigh",
+    "category": "Motivation"
+  },
+  {
+    "id": "86a7d57c-3d78-5bfc-849f-af764732602c",
+    "quote": "Fall seven times, stand up eight.",
+    "author": "Japanese Proverb",
+    "category": "Resilience"
+  },
+  {
+    "id": "0d76d5bc-a878-5569-87ec-c746e4c9f619",
+    "quote": "Opportunities don't happen, you create them.",
+    "author": "Chris Grosser",
+    "category": "Success"
+  },
+  {
+    "id": "880a1ce7-eb50-5d48-99a7-985f31c08818",
+    "quote": "Success isn’t always about greatness. It’s about consistency.",
+    "author": "Dwayne Johnson",
+    "category": "Success"
+  },
+  {
+    "id": "29f0b947-326e-525d-960f-6b22a3dd446d",
+    "quote": "You are stronger than you think.",
+    "author": "Anonymous",
+    "category": "Resilience"
+  },
+  {
+    "id": "ff7cff30-6a59-5ae3-9bae-e890b5781d13",
+    "quote": "The best revenge is massive success.",
+    "author": "Frank Sinatra",
+    "category": "Success"
+  },
+  {
+    "id": "af853ec2-ba10-5912-ba97-dfa2ff5518a2",
+    "quote": "Turn your wounds into wisdom.",
+    "author": "Oprah Winfrey",
+    "category": "Resilience"
+  },
+  {
+    "id": "4414e999-f9f8-5db3-83c0-2428dd9c5923",
+    "quote": "Keep going. Everything you need will come to you at the perfect time.",
+    "author": "Anonymous",
+    "category": "Resilience"
+  },
+  {
+    "id": "63a9cc49-1933-5afb-85c2-d14e8328cf6b",
+    "quote": "Your limitation—it's only your imagination.",
+    "author": "Anonymous",
+    "category": "Creativity"
+  },
+  {
+    "id": "75d3ea78-02d0-5501-8572-35e31e4ee3f1",
+    "quote": "Creativity is intelligence having fun.",
+    "author": "Albert Einstein",
+    "category": "Creativity"
+  },
+  {
+    "id": "24a30353-a503-58fd-b9a1-be947a080ecd",
+    "quote": "Do one thing every day that scares you.",
+    "author": "Eleanor Roosevelt",
+    "category": "Resilience"
+  },
+  {
+    "id": "e67438f4-b00b-5cff-9a87-3f60bf5dbd0f",
+    "quote": "It’s not whether you get knocked down, it’s whether you get up.",
+    "author": "Vince Lombardi",
+    "category": "Resilience"
+  },
+  {
+    "id": "17a13d8c-e554-5412-b048-fe1374049da2",
+    "quote": "If you can dream it, you can do it.",
+    "author": "Walt Disney",
+    "category": "Motivation"
+  },
+  {
+    "id": "02cfa5d8-d5c0-5ac5-84e3-0f6b20dc97b5",
+    "quote": "Don’t let yesterday take up too much of today.",
+    "author": "Will Rogers",
+    "category": "Mindfulness"
+  },
+  {
+    "id": "e704ce45-cddb-58f9-8d25-3e476eec0a49",
+    "quote": "Strive not to be a success, but rather to be of value.",
+    "author": "Albert Einstein",
+    "category": "Success"
+  },
+  {
+    "id": "efba4ea6-1ccb-5b7b-8828-ac1b1e46558b",
+    "quote": "I attribute my success to this: I never gave or took any excuse.",
+    "author": "Florence Nightingale",
+    "category": "Success"
+  },
+  {
+    "id": "c8391b2a-55f3-52fa-9763-4535af0b998a",
+    "quote": "You can either experience the pain of discipline or the pain of regret.",
+    "author": "Jim Rohn",
+    "category": "Focus"
+  },
+  {
+    "id": "8c9d7f12-4fd6-5adc-bca7-cd0aa34f622c",
+    "quote": "The only person you are destined to become is the person you decide to be.",
+    "author": "Ralph Waldo Emerson",
+    "category": "Motivation"
+  },
+  {
+    "id": "51de228d-d7f0-5bcc-8cee-209e6742321c",
+    "quote": "Go the extra mile, it’s never crowded.",
+    "author": "Wayne Dyer",
+    "category": "Success"
+  },
+  {
+    "id": "e6bf38f4-597f-50ec-946f-ece349a3b21c",
+    "quote": "The future depends on what you do today.",
+    "author": "Mahatma Gandhi",
+    "category": "Focus"
+  },
+  {
+    "id": "6c83182f-e373-58f1-8c3e-10ea4ba43ea1",
+    "quote": "Don’t be afraid to give up the good to go for the great.",
+    "author": "John D. Rockefeller",
+    "category": "Success"
+  },
+  {
+    "id": "46b7fa56-292f-5547-9542-57f1150fb597",
+    "quote": "If you are not willing to risk the usual, you will have to settle for the ordinary.",
+    "author": "Jim Rohn",
+    "category": "Success"
+  },
+  {
+    "id": "828693ca-9c23-57ea-b8de-acbe1f62cc5a",
+    "quote": "Believe in yourself, take on your challenges, dig deep within yourself to conquer fears.",
+    "author": "Chantal Sutherland",
+    "category": "Resilience"
+  },
+  {
+    "id": "beae0c04-443b-5b58-87ec-dbb48bd45108",
+    "quote": "Start where you are. Use what you have. Do what you can.",
+    "author": "Arthur Ashe",
+    "category": "Motivation"
+  },
+  {
+    "id": "32b41480-3c17-5c54-9376-7295de335744",
+    "quote": "The way to get started is to quit talking and begin doing.",
+    "author": "Walt Disney",
+    "category": "Motivation"
+  },
+  {
+    "id": "3a1b10f8-758d-5652-89f5-82272ba94382",
+    "quote": "Success is walking from failure to failure with no loss of enthusiasm.",
+    "author": "Winston Churchill",
+    "category": "Success"
+  },
+  {
+    "id": "458d5ede-8b04-5214-8ba1-46e108aae044",
+    "quote": "You’ve got to get up every morning with determination if you’re going to go to bed with satisfaction.",
+    "author": "George Lorimer",
+    "category": "Motivation"
+  },
+  {
+    "id": "e70b1186-0ac7-54ee-95f5-29388f65b2be",
+    "quote": "Your positive action combined with positive thinking results in success.",
+    "author": "Shiv Khera",
+    "category": "Success"
+  },
+  {
+    "id": "e42e8e6c-aca7-50a8-b94b-7e1b9f4af698",
+    "quote": "A champion is defined not by their wins but by how they recover when they fall.",
+    "author": "Serena Williams",
+    "category": "Resilience"
+  },
+  {
+    "id": "7b6e112f-29ce-52f2-8b0c-a40aae1d20e2",
+    "quote": "To succeed in life, you need two things: ignorance and confidence.",
+    "author": "Mark Twain",
+    "category": "Success"
+  },
+  {
+    "id": "2422b811-85b8-5fe1-9869-482eec386eb1",
+    "quote": "If you want to fly, give up everything that weighs you down.",
+    "author": "Buddha",
+    "category": "Mindfulness"
+  },
+  {
+    "id": "33ba3b17-fc64-54f5-921f-3f327eda84c5",
+    "quote": "A year from now you may wish you had started today.",
+    "author": "Karen Lamb",
+    "category": "Motivation"
+  },
+  {
+    "id": "795524d8-3456-5372-8ead-740b97f57562",
+    "quote": "Don’t let the fear of losing be greater than the excitement of winning.",
+    "author": "Robert Kiyosaki",
+    "category": "Resilience"
+  },
+  {
+    "id": "4172eafc-56dd-5eea-803f-394b5659a91a",
+    "quote": "The only thing standing between you and your goal is the story you keep telling yourself.",
+    "author": "Jordan Belfort",
+    "category": "Motivation"
+  },
+  {
+    "id": "87c0574d-e9fc-51a6-8f7b-2feb7c037d36",
+    "quote": "Believe and act as if it were impossible to fail.",
+    "author": "Charles Kettering",
+    "category": "Motivation"
+  },
+  {
+    "id": "591d1476-6dec-534a-b2e9-0afd2f59735a",
+    "quote": "The secret of success is to do the common thing uncommonly well.",
+    "author": "John D. Rockefeller Jr.",
+    "category": "Success"
+  },
+  {
+    "id": "c3616225-1ef5-566e-ad14-ec932603e9fe",
+    "quote": "Success usually comes to those who are too busy to be looking for it.",
+    "author": "Henry David Thoreau",
+    "category": "Success"
+  },
+  {
+    "id": "b6bce47b-51de-5f71-9fe5-9d460d34b321",
+    "quote": "Don't wish it were easier. Wish you were better.",
+    "author": "Jim Rohn",
+    "category": "Motivation"
+  },
+  {
+    "id": "23eb528f-1db9-5eff-8db4-477bfe3a826f",
+    "quote": "The harder I work, the luckier I get.",
+    "author": "Thomas Jefferson",
+    "category": "Success"
+  },
+  {
+    "id": "e6bd489b-4ff6-51cb-95f0-b5aa3b27bbbb",
+    "quote": "Opportunities don't happen. You create them.",
+    "author": "Chris Grosser",
+    "category": "Success"
+  },
+  {
+    "id": "16f0c5d0-b837-5fe0-adf1-9da9b2682030",
+    "quote": "Don't wait. The time will never be just right.",
+    "author": "Napoleon Hill",
+    "category": "Motivation"
+  },
+  {
+    "id": "2360675a-b5b5-520a-ab6e-c0fcc4fe4b5a",
+    "quote": "You are your only limit.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "26cc002c-a048-512f-8c69-7a39ce29fddf",
+    "quote": "Doubt is a killer. You just have to know who you are and what you stand for.",
+    "author": "Jennifer Lopez",
+    "category": "Resilience"
+  },
+  {
+    "id": "c735bad8-a5ac-5cca-8121-c53c6ca0c05a",
+    "quote": "The only place where success comes before work is in the dictionary.",
+    "author": "Vidal Sassoon",
+    "category": "Success"
+  },
+  {
+    "id": "9e385362-026e-58fa-a2be-834ce0b980aa",
+    "quote": "Don’t let small minds convince you that your dreams are too big.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "f0d51b8a-8eeb-5e27-a827-2673e02210d7",
+    "quote": "If you want something you never had, you have to do something you’ve never done.",
+    "author": "Thomas Jefferson",
+    "category": "Motivation"
+  },
+  {
+    "id": "ab8c0a09-de65-597a-81bf-d02acbe945aa",
+    "quote": "You are the master of your destiny.",
+    "author": "Napoleon Hill",
+    "category": "Motivation"
+  },
+  {
+    "id": "9d7c1817-f4e9-5a92-aba3-313fa1a0a4e2",
+    "quote": "Don’t stop until you’re proud.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "c5e6a6e3-25b9-5e14-9fab-7e1b2e1e7844",
+    "quote": "The best dreams happen when you’re awake.",
+    "author": "Cherie Gilderbloom",
+    "category": "Creativity"
+  },
+  {
+    "id": "861bdec4-eda4-5b8e-aec2-fb5773b6033e",
+    "quote": "You are the CEO of your own life.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "1b957fa1-ae23-513d-b250-72c43a09b68d",
+    "quote": "Don’t be afraid to fail. Be afraid not to try.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "bffa2c99-01f9-55a9-b871-d0a6bc882899",
+    "quote": "The only thing that can stop you is you.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "fafd9fcb-d38c-57ba-aa99-d82a2cd0aaaa",
+    "quote": "Don’t let fear decide your future.",
+    "author": "Shalane Flanagan",
+    "category": "Resilience"
+  },
+  {
+    "id": "fd60faf8-e81e-5d47-a9d3-a62fb9641697",
+    "quote": "You are the author of your own story.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "e3f57542-d00a-5c3a-b580-d2a98d5ce28a",
+    "quote": "Don’t let anyone dull your sparkle.",
+    "author": "Unknown",
+    "category": "Happiness"
+  },
+  {
+    "id": "322918f4-ae40-5c5c-9281-cdb15d6e86cc",
+    "quote": "The only way to finish is to start.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "481d7776-9e04-599f-be3f-187710cb73af",
+    "quote": "Don’t be afraid to shine.",
+    "author": "Unknown",
+    "category": "Happiness"
+  },
+  {
+    "id": "f31e1e72-b3ce-59a9-bd8d-494cc21c22d9",
+    "quote": "You are the sky. Everything else is just the weather.",
+    "author": "Pema Chödrön",
+    "category": "Mindfulness"
+  },
+  {
+    "id": "a9221624-6a56-562a-b0bb-14221a8b92ba",
+    "quote": "Don’t let your dreams be dreams.",
+    "author": "Jack Johnson",
+    "category": "Motivation"
+  },
+  {
+    "id": "967aa177-881a-5e58-9e4d-c0e502228fa8",
+    "quote": "The only thing that stands between you and your dream is the will to try and the belief that it is actually possible.",
+    "author": "Joel Brown",
+    "category": "Motivation"
+  },
+  {
+    "id": "99b26340-647a-5046-b6ae-ff263f371916",
+    "quote": "Don’t be afraid to be great.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "quote": "You are the light of the world.",
+    "author": "Matthew 5:14",
+    "category": "General"
+  },
+  {
+    "id": "1bd66699-dac7-59fd-8565-3818c8c7ffcd",
+    "quote": "Don’t let your fears decide your fate.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "47dbf57d-7cf9-5fbd-aceb-a12f0a3e0aed",
+    "quote": "The only thing that limits you is your imagination.",
+    "author": "Unknown",
+    "category": "Creativity"
+  },
+  {
+    "id": "02d05a1c-2bda-5e6f-80dd-50f5d21b223f",
+    "quote": "Don’t be afraid to take risks.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "47e801f4-16d5-54aa-94bb-b5bbe71d49fa",
+    "quote": "You are the hero of your own story.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "f7a92236-0c86-5cda-aee7-4954d4ce4d8a",
+    "quote": "Don’t let your past define your future.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "da9b67db-1019-55dc-9c9d-3baaa405b26c",
+    "quote": "The only way to predict the future is to create it.",
+    "author": "Abraham Lincoln",
+    "category": "Motivation"
+  },
+  {
+    "id": "5b574eb4-079f-528d-9d0c-9c96e54e1e1d",
+    "quote": "Don’t be afraid to dream big.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "723d153d-c1b8-57f7-a3ee-0bf2bcc96c27",
+    "quote": "You are the change you wish to see in the world.",
+    "author": "Mahatma Gandhi",
+    "category": "Motivation"
+  },
+  {
+    "id": "7c27e5db-13ff-5361-8369-e3e02c9e6751",
+    "quote": "Don’t let your circumstances define you.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "3d734047-aed2-5fd7-9f4b-c047c721d827",
+    "quote": "The only thing that matters is what you do now.",
+    "author": "Unknown",
+    "category": "Focus"
+  },
+  {
+    "id": "2491953b-9ee7-57e0-8c7a-3095490a5a90",
+    "quote": "Don’t be afraid to be yourself.",
+    "author": "Unknown",
+    "category": "Happiness"
+  },
+  {
+    "id": "411bb6eb-48d1-56b7-9854-605768483ca7",
+    "quote": "You are the reason someone smiles today.",
+    "author": "Unknown",
+    "category": "Gratitude"
+  },
+  {
+    "id": "71cf9057-2a39-57cb-8fde-448a03dccebb",
+    "quote": "Don’t let your doubts stop you.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "4eef62d9-0d0a-5763-80eb-134ac78cfb93",
+    "quote": "Don’t let your fears hold you back.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "1b59cd34-14db-5d24-a1f1-0916d3279434",
+    "quote": "You are the architect of your own destiny.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "b5197b85-2c24-5d62-a089-e38bcc71a7b2",
+    "quote": "Don’t let your failures define you.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "3565564f-5a5e-50c0-afe9-debe92bb0eb0",
+    "quote": "You are the light at the end of the tunnel.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "e0cb3799-6f5c-5276-bc72-5c124eb39746",
+    "quote": "Don’t let your fears win.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "fb9426d1-0600-5a48-af2a-57fab1cf43f8",
+    "quote": "Don’t let your past hold you back.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "0d643903-cff4-5ee3-981e-372e1e93bc53",
+    "quote": "You are the captain of your own ship.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "1f251db1-151c-5821-bd6b-1e81e6824b31",
+    "quote": "Don’t let your dreams die.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "id": "21f937bc-0d73-5bd3-994d-68b93be26923",
+    "quote": "The only thing that separates success from failure is one last try.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "bf3b54ce-543b-59d4-a748-25f7d565fac4",
+    "quote": "Don’t let your fears stop you from achieving your dreams.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "id": "14d75e68-1999-5c7f-95ff-61feeec4574f",
+    "quote": "You are the key to your own success.",
+    "author": "Unknown",
+    "category": "Success"
+  },
+  {
+    "id": "55059b8a-ac19-59d0-a173-82ac0e9796a0",
+    "quote": "Don’t let your doubts win.",
+    "author": "Unknown",
+    "category": "Resilience"
+  },
+  {
+    "quote": "What you do today can improve all your tomorrows.",
+    "author": "Ralph Marston",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Success seems to be largely a matter of hanging on after others have let go.",
+    "author": "William Feather",
+    "category": "Success"
+  },
+  {
+    "quote": "Start by doing what's necessary; then do what's possible; and suddenly you are doing the impossible.",
+    "author": "Francis of Assisi",
+    "category": "Motivation"
+  },
+  {
+    "quote": "In the middle of every difficulty lies opportunity.",
+    "author": "Albert Einstein",
+    "category": "Motivation"
+  },
+  {
+    "quote": "The man who moves a mountain begins by carrying away small stones.",
+    "author": "Confucius",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Quality is not an act, it is a habit.",
+    "author": "Aristotle",
+    "category": "Success"
+  },
+  {
+    "quote": "Failure will never overtake me if my determination to succeed is strong enough.",
+    "author": "Og Mandino",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Discipline is the bridge between goals and accomplishment.",
+    "author": "Jim Rohn",
+    "category": "Success"
+  },
+  {
+    "quote": "A goal is a dream with a deadline.",
+    "author": "Napoleon Hill",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Courage doesn't always roar. Sometimes courage is the quiet voice at the end of the day saying, 'I will try again tomorrow.'",
+    "author": "Mary Anne Radmacher",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Perseverance is not a long race; it is many short races one after the other.",
+    "author": "Walter Elliot",
+    "category": "Success"
+  },
+  {
+    "quote": "Do what you can, with what you have, where you are.",
+    "author": "Theodore Roosevelt",
+    "category": "Motivation"
+  },
+  {
+    "quote": "You must do the things you think you cannot do.",
+    "author": "Eleanor Roosevelt",
+    "category": "Motivation"
+  },
+  {
+    "quote": "If it doesn't challenge you, it won't change you.",
+    "author": "Fred DeVito",
+    "category": "Motivation"
+  },
+  {
+    "quote": "The harder the conflict, the greater the triumph.",
+    "author": "George Washington",
+    "category": "Success"
+  },
+  {
+    "quote": "Keep your face always toward the sunshine and shadows will fall behind you.",
+    "author": "Walt Whitman",
+    "category": "Happiness"
+  },
+  {
+    "quote": "You can't build a reputation on what you are going to do.",
+    "author": "Henry Ford",
+    "category": "Success"
+  },
+  {
+    "quote": "Happiness is not something ready made. It comes from your own actions.",
+    "author": "Dalai Lama",
+    "category": "Happiness"
+  },
+  {
+    "quote": "We are what we repeatedly do. Excellence, then, is not an act, but a habit.",
+    "author": "Will Durant",
+    "category": "Success"
+  },
+  {
+    "quote": "When you reach the end of your rope, tie a knot in it and hang on.",
+    "author": "Franklin D. Roosevelt",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Rise above the storm and you will find the sunshine.",
+    "author": "Mario Fernandez",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Energy and persistence conquer all things.",
+    "author": "Benjamin Franklin",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Breathe. Let go. And remind yourself that this very moment is the only one you know you have for sure.",
+    "author": "Oprah Winfrey",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "The big lesson in life is never be scared of anyone or anything.",
+    "author": "Frank Sinatra",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Creativity involves breaking out of expected patterns so you can look at things in a different way.",
+    "author": "Edward de Bono",
+    "category": "Creativity"
+  },
+  {
+    "quote": "To live a creative life, we must lose our fear of being wrong.",
+    "author": "Joseph Chilton Pearce",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Every artist was first an amateur.",
+    "author": "Ralph Waldo Emerson",
+    "category": "Creativity"
+  },
+  {
+    "quote": "What you get by achieving your goals is not as important as what you become by achieving your goals.",
+    "author": "Zig Ziglar",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Success is getting what you want, happiness is wanting what you get.",
+    "author": "W. P. Kinsella",
+    "category": "Happiness"
+  },
+  {
+    "quote": "The mind is everything. What you think you become.",
+    "author": "Buddha",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Keep your eyes on the stars, and your feet on the ground.",
+    "author": "Theodore Roosevelt",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Action is the foundational key to all success.",
+    "author": "Pablo Picasso",
+    "category": "Success"
+  },
+  {
+    "quote": "You don't have to be great to start, but you have to start to be great.",
+    "author": "Zig Ziglar",
+    "category": "Motivation"
+  },
+  {
+    "quote": "A river cuts through rock not because of its power, but because of its persistence.",
+    "author": "James N. Watkins",
+    "category": "Motivation"
+  },
+  {
+    "quote": "It is never too late to be what you might have been.",
+    "author": "George Eliot",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Motivation gets you going and habit gets you there.",
+    "author": "Zig Ziglar",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Success is liking yourself, liking what you do, and liking how you do it.",
+    "author": "Maya Angelou",
+    "category": "Success"
+  },
+  {
+    "quote": "Happiness is not by chance, but by choice.",
+    "author": "Jim Rohn",
+    "category": "Happiness"
+  },
+  {
+    "quote": "The greatest weapon against stress is our ability to choose one thought over another.",
+    "author": "William James",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Joy is not in things; it is in us.",
+    "author": "Richard Wagner",
+    "category": "Happiness"
+  },
+  {
+    "quote": "A calm mind brings inner strength and self-confidence.",
+    "author": "Dalai Lama",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "The simple act of paying attention can take you a long way.",
+    "author": "Keanu Reeves",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Success is how high you bounce when you hit bottom.",
+    "author": "George S. Patton",
+    "category": "Success"
+  },
+  {
+    "quote": "He who is not courageous enough to take risks will accomplish nothing in life.",
+    "author": "Muhammad Ali",
+    "category": "Motivation"
+  },
+  {
+    "quote": "If you hear a voice within you say you cannot paint, then by all means paint and that voice will be silenced.",
+    "author": "Vincent van Gogh",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Make each day your masterpiece.",
+    "author": "John Wooden",
+    "category": "Motivation"
+  },
+  {
+    "quote": "The difference between ordinary and extraordinary is that little extra.",
+    "author": "Jimmy Johnson",
+    "category": "Motivation"
+  },
+  {
+    "quote": "A champion is defined not by their wins but by how they can recover when they fall.",
+    "author": "Serena Williams",
+    "category": "Success"
+  },
+  {
+    "quote": "You become what you believe.",
+    "author": "Oprah Winfrey",
+    "category": "Motivation"
+  },
+  {
+    "quote": "The miracle is not that we do this work, but that we are happy to do it.",
+    "author": "Mother Teresa",
+    "category": "Happiness"
+  },
+  {
+    "quote": "Patience is not the ability to wait, but how you act while you're waiting.",
+    "author": "Joyce Meyer",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "The more you praise and celebrate your life, the more there is in life to celebrate.",
+    "author": "Oprah Winfrey",
+    "category": "Happiness"
+  },
+  {
+    "quote": "Success demands singleness of purpose.",
+    "author": "Vince Lombardi",
+    "category": "Success"
+  },
+  {
+    "quote": "If you're not willing to risk the usual, you will have to settle for the ordinary.",
+    "author": "Jim Rohn",
+    "category": "Success"
+  },
+  {
+    "quote": "Focus on being productive instead of busy.",
+    "author": "Tim Ferriss",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Everything you can imagine is real.",
+    "author": "Pablo Picasso",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Success is not in what you have, but who you are.",
+    "author": "Bo Bennett",
+    "category": "Success"
+  },
+  {
+    "quote": "Once you choose hope, anything's possible.",
+    "author": "Christopher Reeve",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Happiness is the highest form of health.",
+    "author": "Dalai Lama",
+    "category": "Happiness"
+  },
+  {
+    "quote": "Slow down and everything you are chasing will come around and catch you.",
+    "author": "John De Paola",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Great things are done by a series of small things brought together.",
+    "author": "Vincent van Gogh",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Success is a state of mind. If you want success, start thinking of yourself as a success.",
+    "author": "Joyce Brothers",
+    "category": "Success"
+  },
+  {
+    "quote": "Dreams don't work unless you do.",
+    "author": "John C. Maxwell",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Achievement seems to be connected with action. Successful men keep moving. They make mistakes, but they don't quit.",
+    "author": "Conrad Hilton",
+    "category": "Success"
+  },
+  {
+    "quote": "Fear is a reaction. Courage is a decision.",
+    "author": "Winston Churchill",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Stay hungry, stay foolish.",
+    "author": "Stewart Brand",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Life is 10% what happens to us and 90% how we react to it.",
+    "author": "Charles R. Swindoll",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Live life to the fullest, and focus on the positive.",
+    "author": "Matt Cameron",
+    "category": "Happiness"
+  },
+  {
+    "quote": "Success is peace of mind that results from knowing you did your best.",
+    "author": "John Wooden",
+    "category": "Success"
+  },
+  {
+    "quote": "Be so good they can't ignore you.",
+    "author": "Steve Martin",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Amateurs sit and wait for inspiration, the rest of us just get up and go to work.",
+    "author": "Stephen King",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Peace comes from within. Do not seek it without.",
+    "author": "Buddha",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Happiness is a direction, not a place.",
+    "author": "Sydney J. Harris",
+    "category": "Happiness"
+  },
+  {
+    "quote": "Motivation is what gets you started. Habit is what keeps you going.",
+    "author": "Jim Ryun",
+    "category": "Motivation"
+  },
+  {
+    "quote": "If you want to lift yourself up, lift up someone else.",
+    "author": "Booker T. Washington",
+    "category": "Happiness"
+  },
+  {
+    "quote": "To accomplish great things, we must not only act, but also dream; not only plan, but also believe.",
+    "author": "Anatole France",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Happiness is when what you think, what you say, and what you do are in harmony.",
+    "author": "Mahatma Gandhi",
+    "category": "Happiness"
+  },
+  {
+    "quote": "Small daily improvements over time lead to stunning results.",
+    "author": "Robin Sharma",
+    "category": "Success"
+  },
+  {
+    "quote": "It is during our darkest moments that we must focus to see the light.",
+    "author": "Aristotle",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "The more difficult the victory, the greater the happiness in winning.",
+    "author": "Pele",
+    "category": "Success"
+  },
+  {
+    "quote": "Do not wait to strike till the iron is hot; but make it hot by striking.",
+    "author": "William Butler Yeats",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Happiness often sneaks in through a door you didn't know you left open.",
+    "author": "John Barrymore",
+    "category": "Happiness"
+  },
+  {
+    "quote": "Mindfulness isn't difficult, we just need to remember to do it.",
+    "author": "Sharon Salzberg",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "The most effective way to do it, is to do it.",
+    "author": "Amelia Earhart",
+    "category": "Motivation"
+  },
+  {
+    "quote": "The only journey is the one within.",
+    "author": "Rainer Maria Rilke",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Success isn't about the end result, it's about what you learn along the way.",
+    "author": "Vera Wang",
+    "category": "Success"
+  },
+  {
+    "quote": "The best way to pay for a lovely moment is to enjoy it.",
+    "author": "Richard Bach",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Creativity takes courage.",
+    "author": "Henri Matisse",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Your life does not get better by chance, it gets better by change.",
+    "author": "Jim Rohn",
+    "category": "Motivation"
+  },
+  {
+    "quote": "I never dreamed about success. I worked for it.",
+    "author": "Estée Lauder",
+    "category": "Success"
+  },
+  {
+    "quote": "Success is not how high you have climbed, but how you make a positive difference to the world.",
+    "author": "Roy T. Bennett",
+    "category": "Success"
+  },
+  {
+    "quote": "Happiness is a warm puppy.",
+    "author": "Charles M. Schulz",
+    "category": "Happiness"
+  },
+  {
+    "quote": "What lies behind us and what lies before us are tiny matters compared to what lies within us.",
+    "author": "Ralph Waldo Emerson",
+    "category": "Motivation"
+  },
+  {
+    "quote": "The most wasted of all days is one without laughter.",
+    "author": "Nicolas Chamfort",
+    "category": "Happiness"
+  },
+  {
+    "quote": "Starve your distractions, feed your focus.",
+    "author": "Unknown",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Creativity is seeing what everyone else has seen, and thinking what no one else has thought.",
+    "author": "Albert Szent-Gyorgyi",
+    "category": "Creativity"
+  },
+  {
+    "quote": "Silence isn't empty, it's full of answers.",
+    "author": "Unknown",
+    "category": "Mindfulness"
+  },
+  {
+    "quote": "Let perseverance be your engine and hope your fuel.",
+    "author": "H. Jackson Brown Jr.",
+    "category": "Motivation"
+  },
+  {
+    "quote": "Success is achieved and maintained by those who try and keep trying.",
+    "author": "W. Clement Stone",
+    "category": "Success"
+  },
+  {
+    "quote": "Your present circumstances don't determine where you can go; they merely determine where you start.",
+    "author": "Nido Qubein",
+    "category": "Motivation"
+  }
 ]

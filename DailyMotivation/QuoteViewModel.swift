@@ -65,20 +65,9 @@ class QuoteViewModel: ObservableObject {
             currentQuote = nil
             return
         }
+
         ensureSeenQuotesAreCurrent()
-        let day = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 0
-        // Ensure modulo operation doesn't crash if count is 0 (already guarded, but good practice)
-        if allQuotes.count > 0 {
-            let dailyQuote = allQuotes[day % allQuotes.count]
-            if seenQuoteIDs.contains(dailyQuote.id),
-               let alternateQuote = nextUnseenQuote(from: allQuotes) {
-                currentQuote = alternateQuote
-            } else {
-                currentQuote = dailyQuote
-            }
-        } else {
-            currentQuote = nil
-        }
+        currentQuote = getDailyQuote()
     }
     
     // Set the current quote to a random one from the list
@@ -171,6 +160,27 @@ class QuoteViewModel: ObservableObject {
         )
     }
 
+    /// Returns quotes matching the search query across quote text and author.
+    func filterQuotes(_ quotes: [Quote], matching query: String) -> [Quote] {
+        let normalizedQuery = normalizedSearchText(for: query)
+        guard !normalizedQuery.isEmpty else { return quotes }
+
+        return quotes.filter { quote in
+            searchableText(for: quote.quote).contains(normalizedQuery) ||
+            searchableText(for: quote.author).contains(normalizedQuery)
+        }
+    }
+
+    /// Returns favorite quotes with sort, category, and search applied.
+    func getFavoriteQuotes(
+        sortedBy sort: FavoriteSortOption,
+        filteredBy category: String?,
+        matching query: String
+    ) -> [Quote] {
+        let favorites = getFavoriteQuotes(sortedBy: sort, filteredBy: category)
+        return filterQuotes(favorites, matching: query)
+    }
+
     /// All distinct categories available in the current quote list.
     func availableCategories(includeAll: Bool = true) -> [String] {
         let unique = Set(allQuotes.map { $0.category })
@@ -196,10 +206,7 @@ class QuoteViewModel: ObservableObject {
 
     /// Returns the daily quote based on the day of the year.
     func getDailyQuote() -> Quote? {
-        guard !allQuotes.isEmpty else { return nil }
-        let calendar = Calendar.current
-        let dayOfYear = calendar.ordinality(of: .day, in: .year, for: Date()) ?? 1
-        let quoteIndex = (dayOfYear - 1) % allQuotes.count
+        guard let quoteIndex = dailyQuoteIndex() else { return nil }
         return allQuotes[quoteIndex]
     }
 
@@ -257,5 +264,21 @@ class QuoteViewModel: ObservableObject {
     private func nextUnseenQuote(from quotes: [Quote]) -> Quote? {
         let unseenQuotes = quotes.filter { !seenQuoteIDs.contains($0.id) }
         return unseenQuotes.randomElement()
+    }
+
+    private func normalizedSearchText(for text: String) -> String {
+        text
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+    }
+
+    private func searchableText(for text: String) -> String {
+        normalizedSearchText(for: text)
+    }
+
+    private func dailyQuoteIndex(for date: Date = Date()) -> Int? {
+        guard !allQuotes.isEmpty else { return nil }
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: date) ?? 1
+        return (dayOfYear - 1) % allQuotes.count
     }
 }
