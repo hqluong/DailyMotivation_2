@@ -892,18 +892,10 @@ private struct QuoteLayoutView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         } else {
             VStack(spacing: containerSpacing) {
-                ZStack(alignment: .top) {
-                    Picker("Category", selection: $selectedCategory) {
-                        ForEach(categories, id: \.self) { category in
-                            Text(category).tag(category)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, horizontalPadding)
+                categoryFilterRow(horizontalPadding: horizontalPadding)
                     .opacity(showStreakPopup ? 0 : 1)
                     .allowsHitTesting(!showStreakPopup)
                     .accessibilityHidden(showStreakPopup)
-                }
                 .animation(.easeInOut(duration: 0.3), value: showStreakPopup)
                 .frame(maxWidth: .infinity, alignment: .top)
 
@@ -958,6 +950,47 @@ private struct QuoteLayoutView: View {
                 syncCurrentQuoteWithFilters()
             }
         }
+    }
+
+    @ViewBuilder
+    private func categoryFilterRow(horizontalPadding: CGFloat) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(categories, id: \.self) { category in
+                    let isSelected = selectedCategory == category
+                    Button {
+                        selectedCategory = category
+                    } label: {
+                        Text(category)
+                            .font(.caption.weight(.semibold))
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+                            .foregroundColor(isSelected ? .black : .white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule()
+                                    .fill(
+                                        isSelected
+                                        ? Color.white.opacity(0.92)
+                                        : Color.white.opacity(isPhotoBackground ? 0.14 : 0.18)
+                                    )
+                            )
+                            .overlay(
+                                Capsule()
+                                    .stroke(
+                                        Color.white.opacity(isSelected ? 0.0 : 0.2),
+                                        lineWidth: 1
+                                    )
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, horizontalPadding)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityLabel("Filter quotes by category")
     }
 
     @ViewBuilder
@@ -1633,7 +1666,7 @@ struct SettingsView: View {
                                 Toggle("Enabled", isOn: $reminder.isEnabled)
                                 Spacer()
                                 Button(role: .destructive) {
-                                    removeCustomReminder(id: reminder.id.wrappedValue)
+                                    removeCustomReminder(id: reminder.id)
                                 } label: {
                                     Image(systemName: "trash")
                                 }
@@ -1645,11 +1678,11 @@ struct SettingsView: View {
 
                             DatePicker(
                                 "Time",
-                                selection: timeBinding(hour: reminder.hour, minute: reminder.minute),
+                                selection: timeBinding(hour: $reminder.hour, minute: $reminder.minute),
                                 displayedComponents: .hourAndMinute
                             )
 
-                            weekdayPicker(weekdays: reminder.weekdays)
+                            weekdayPicker(weekdays: $reminder.weekdays)
                         }
                         .padding(.vertical, 4)
                     }

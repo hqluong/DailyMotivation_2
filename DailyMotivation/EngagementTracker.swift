@@ -27,6 +27,8 @@ final class EngagementTracker: ObservableObject {
         let lastFavorited: Date?
         let needsReminderNudge: Bool
         let recentHistory: [DailyEngagement]
+        let shareClickedCount: Int
+        let shareCompletedCount: Int
 
         static let empty = StreakSummary(
             currentStreak: 0,
@@ -34,7 +36,9 @@ final class EngagementTracker: ObservableObject {
             lastViewed: nil,
             lastFavorited: nil,
             needsReminderNudge: true,
-            recentHistory: []
+            recentHistory: [],
+            shareClickedCount: 0,
+            shareCompletedCount: 0
         )
     }
 
@@ -47,14 +51,19 @@ final class EngagementTracker: ObservableObject {
     private let viewedDatesKey = "engagement.viewedDates"
     private let favoriteDatesKey = "engagement.favoriteDates"
     private let bestStreakKey = "engagement.bestStreak"
+    private let shareClickedCountKey = "engagement.shareClickedCount"
+    private let shareCompletedCountKey = "engagement.shareCompletedCount"
     private static let maxTrackedDays = 365
     private static let maxBestStreak = 10_000
+    private static let maxShareEventCount = 1_000_000
     private static let maxStoredDataSize = 128 * 1024
     private static let maxHistoryAge: TimeInterval = 60 * 60 * 24 * 365 * 5 // five years
 
     private var viewedDays: Set<Date>
     private var favoritedDays: Set<Date>
     private var bestStreak: Int
+    private var shareClickedCount: Int
+    private var shareCompletedCount: Int
 
     init(
         userDefaults: UserDefaults = .standard,
@@ -82,6 +91,16 @@ final class EngagementTracker: ObservableObject {
             forKey: bestStreakKey,
             from: userDefaults
         )
+        self.shareClickedCount = EngagementTracker.loadCount(
+            forKey: shareClickedCountKey,
+            from: userDefaults,
+            maxValue: Self.maxShareEventCount
+        )
+        self.shareCompletedCount = EngagementTracker.loadCount(
+            forKey: shareCompletedCountKey,
+            from: userDefaults,
+            maxValue: Self.maxShareEventCount
+        )
         self.summary = .empty
 
         recalculateSummary()
@@ -105,14 +124,32 @@ final class EngagementTracker: ObservableObject {
         recalculateSummary(reference: date)
     }
 
+    /// Records a tap on the quote share button.
+    func logShareClicked() {
+        shareClickedCount = min(shareClickedCount + 1, Self.maxShareEventCount)
+        userDefaults.set(shareClickedCount, forKey: shareClickedCountKey)
+        recalculateSummary()
+    }
+
+    /// Records a successful share completion from the system share sheet.
+    func logShareCompleted() {
+        shareCompletedCount = min(shareCompletedCount + 1, Self.maxShareEventCount)
+        userDefaults.set(shareCompletedCount, forKey: shareCompletedCountKey)
+        recalculateSummary()
+    }
+
     /// Clears all tracked data. Useful for previews or testing.
     func resetAll() {
         viewedDays = []
         favoritedDays = []
         bestStreak = 0
+        shareClickedCount = 0
+        shareCompletedCount = 0
         saveDates(viewedDays, key: viewedDatesKey)
         saveDates(favoritedDays, key: favoriteDatesKey)
         userDefaults.set(bestStreak, forKey: bestStreakKey)
+        userDefaults.set(shareClickedCount, forKey: shareClickedCountKey)
+        userDefaults.set(shareCompletedCount, forKey: shareCompletedCountKey)
         recalculateSummary()
     }
 }
@@ -141,6 +178,12 @@ private extension EngagementTracker {
         let storedValue = userDefaults.integer(forKey: key)
         if storedValue < 0 { return 0 }
         return min(storedValue, maxBestStreak)
+    }
+
+    static func loadCount(forKey key: String, from userDefaults: UserDefaults, maxValue: Int) -> Int {
+        let storedValue = userDefaults.integer(forKey: key)
+        if storedValue < 0 { return 0 }
+        return min(storedValue, maxValue)
     }
 
     func saveDates(_ dates: Set<Date>, key: String) {
@@ -184,7 +227,9 @@ private extension EngagementTracker {
             lastViewed: lastViewed,
             lastFavorited: lastFavorited,
             needsReminderNudge: needsNudge,
-            recentHistory: history
+            recentHistory: history,
+            shareClickedCount: shareClickedCount,
+            shareCompletedCount: shareCompletedCount
         )
 
         if summary != newSummary {
