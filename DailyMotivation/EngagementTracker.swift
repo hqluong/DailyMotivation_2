@@ -15,6 +15,7 @@ final class EngagementTracker: ObservableObject {
         let date: Date
         let viewed: Bool
         let favorited: Bool
+        let resetCompleted: Bool
 
         var id: Date { date }
     }
@@ -25,6 +26,7 @@ final class EngagementTracker: ObservableObject {
         let bestStreak: Int
         let lastViewed: Date?
         let lastFavorited: Date?
+        let lastResetCompleted: Date?
         let needsReminderNudge: Bool
         let recentHistory: [DailyEngagement]
         let shareClickedCount: Int
@@ -35,6 +37,7 @@ final class EngagementTracker: ObservableObject {
             bestStreak: 0,
             lastViewed: nil,
             lastFavorited: nil,
+            lastResetCompleted: nil,
             needsReminderNudge: true,
             recentHistory: [],
             shareClickedCount: 0,
@@ -51,6 +54,8 @@ final class EngagementTracker: ObservableObject {
     private let viewedDatesKey = "engagement.viewedDates"
     private let favoriteDatesKey = "engagement.favoriteDates"
     private let bestStreakKey = "engagement.bestStreak"
+    private let resetCompletedDatesKey = "engagement.resetCompletedDates"
+    private let meaningfulStreakMigrationKey = "engagement.meaningfulStreakMigrationV1"
     private let shareClickedCountKey = "engagement.shareClickedCount"
     private let shareCompletedCountKey = "engagement.shareCompletedCount"
     private static let maxTrackedDays = 365
@@ -61,6 +66,7 @@ final class EngagementTracker: ObservableObject {
 
     private var viewedDays: Set<Date>
     private var favoritedDays: Set<Date>
+    private var resetCompletedDays: Set<Date>
     private var bestStreak: Int
     private var shareClickedCount: Int
     private var shareCompletedCount: Int
@@ -75,18 +81,29 @@ final class EngagementTracker: ObservableObject {
         self.calendar = calendar
 
         let referenceDate = Date()
-        self.viewedDays = EngagementTracker.loadDates(
+        let loadedViewedDays = EngagementTracker.loadDates(
             forKey: viewedDatesKey,
             from: userDefaults,
             calendar: calendar,
             reference: referenceDate
         )
+        self.viewedDays = loadedViewedDays
         self.favoritedDays = EngagementTracker.loadDates(
             forKey: favoriteDatesKey,
             from: userDefaults,
             calendar: calendar,
             reference: referenceDate
         )
+        let hasMigratedMeaningfulStreak = userDefaults.bool(forKey: meaningfulStreakMigrationKey)
+        let storedResetDays = EngagementTracker.loadDates(
+            forKey: resetCompletedDatesKey,
+            from: userDefaults,
+            calendar: calendar,
+            reference: referenceDate
+        )
+        self.resetCompletedDays = hasMigratedMeaningfulStreak
+            ? storedResetDays
+            : storedResetDays.union(loadedViewedDays)
         self.bestStreak = EngagementTracker.loadBestStreak(
             forKey: bestStreakKey,
             from: userDefaults
@@ -103,6 +120,10 @@ final class EngagementTracker: ObservableObject {
         )
         self.summary = .empty
 
+        if !hasMigratedMeaningfulStreak {
+            saveDates(resetCompletedDays, key: resetCompletedDatesKey)
+            userDefaults.set(true, forKey: meaningfulStreakMigrationKey)
+        }
         recalculateSummary()
     }
 
@@ -120,6 +141,15 @@ final class EngagementTracker: ObservableObject {
         let normalized = startOfDay(for: date)
         if favoritedDays.insert(normalized).inserted {
             saveDates(favoritedDays, key: favoriteDatesKey)
+        }
+        recalculateSummary(reference: date)
+    }
+
+    /// Records completion of the reflection-and-action ritual that now drives the main streak.
+    func logDailyResetCompleted(on date: Date = Date()) {
+        let normalized = startOfDay(for: date)
+        if resetCompletedDays.insert(normalized).inserted {
+            saveDates(resetCompletedDays, key: resetCompletedDatesKey)
         }
         recalculateSummary(reference: date)
     }
@@ -142,11 +172,13 @@ final class EngagementTracker: ObservableObject {
     func resetAll() {
         viewedDays = []
         favoritedDays = []
+        resetCompletedDays = []
         bestStreak = 0
         shareClickedCount = 0
         shareCompletedCount = 0
         saveDates(viewedDays, key: viewedDatesKey)
         saveDates(favoritedDays, key: favoriteDatesKey)
+        saveDates(resetCompletedDays, key: resetCompletedDatesKey)
         userDefaults.set(bestStreak, forKey: bestStreakKey)
         userDefaults.set(shareClickedCount, forKey: shareClickedCountKey)
         userDefaults.set(shareCompletedCount, forKey: shareCompletedCountKey)
@@ -212,11 +244,12 @@ private extension EngagementTracker {
 
         let lastViewed = viewedDays.max()
         let lastFavorited = favoritedDays.max()
+        let lastResetCompleted = resetCompletedDays.max()
 
         let needsNudge: Bool = {
-            guard let lastViewed = lastViewed else { return true }
-            let daysSinceLastView = calendar.dateComponents([.day], from: lastViewed, to: today).day ?? 0
-            return daysSinceLastView >= 2
+            guard let lastResetCompleted else { return true }
+            let daysSinceLastReset = calendar.dateComponents([.day], from: lastResetCompleted, to: today).day ?? 0
+            return daysSinceLastReset >= 2
         }()
 
         let history = buildHistory(window: historyWindow, reference: today)
@@ -226,6 +259,7 @@ private extension EngagementTracker {
             bestStreak: max(bestStreak, current),
             lastViewed: lastViewed,
             lastFavorited: lastFavorited,
+            lastResetCompleted: lastResetCompleted,
             needsReminderNudge: needsNudge,
             recentHistory: history,
             shareClickedCount: shareClickedCount,
@@ -240,7 +274,13 @@ private extension EngagementTracker {
     func calculateCurrentStreak(asOf date: Date) -> Int {
         var streak = 0
         var cursor = date
-        while viewedDays.contains(cursor) {
+        if !resetCompletedDays.contains(cursor),
+           let yesterday = calendar.date(byAdding: .day, value: -1, to: cursor),
+           resetCompletedDays.contains(yesterday) {
+            cursor = yesterday
+        }
+
+        while resetCompletedDays.contains(cursor) {
             streak += 1
             guard let previous = calendar.date(byAdding: .day, value: -1, to: cursor) else { break }
             cursor = previous
@@ -262,7 +302,15 @@ private extension EngagementTracker {
             let normalized = startOfDay(for: day)
             let viewed = viewedDays.contains(normalized)
             let favorited = favoritedDays.contains(normalized)
-            results.append(DailyEngagement(date: normalized, viewed: viewed, favorited: favorited))
+            let resetCompleted = resetCompletedDays.contains(normalized)
+            results.append(
+                DailyEngagement(
+                    date: normalized,
+                    viewed: viewed,
+                    favorited: favorited,
+                    resetCompleted: resetCompleted
+                )
+            )
         }
         return results
     }

@@ -4,10 +4,14 @@ import SwiftUI
 
 /// The data returned when onboarding finishes.
 struct OnboardingResult {
-    let primaryCategory: String?
+    let preferredCategories: [String]
     let reminderEnabled: Bool
     let reminderHour: Int
     let reminderMinute: Int
+
+    var primaryCategory: String? {
+        preferredCategories.first
+    }
 }
 
 /// A lightweight onboarding flow that helps users pick content and reminders.
@@ -42,7 +46,7 @@ struct OnboardingView: View {
                 colors: [
                     Color(red: 0.10, green: 0.12, blue: 0.22),
                     Color(red: 0.06, green: 0.09, blue: 0.18),
-                    Color(red: 0.09, green: 0.18, blue: 0.32)
+                    Color(red: 0.09, green: 0.18, blue: 0.32),
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -67,134 +71,141 @@ struct OnboardingView: View {
             }
             .ignoresSafeArea()
 
-            VStack(spacing: 24) {
-                VStack(spacing: 8) {
-                    Text("Welcome to Daily Motivation")
-                        .font(.largeTitle).bold()
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                    Text("Pick what inspires you, set a reminder, and start a streak.")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.82))
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, 20)
-
-                glassCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Choose your focus")
-                            .font(.headline)
+            ScrollView {
+                VStack(spacing: 24) {
+                    VStack(spacing: 8) {
+                        Text("Welcome to Daily Motivation")
+                            .font(.largeTitle).bold()
                             .foregroundColor(.white)
-                        Text("Pick 2–3 categories to shape your daily mix.")
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.8))
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 2), spacing: 10) {
-                            ForEach(categories, id: \.self) { category in
-                                let isSelected = selectedCategories.contains(category)
-                                Button {
-                                    toggle(category: category)
-                                } label: {
-                                    HStack {
-                                        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                                            .foregroundStyle(isSelected ? Color.green : Color.white.opacity(0.7))
-                                        Text(category)
-                                            .foregroundColor(.white)
-                                            .font(.subheadline)
-                                        Spacer()
+                            .multilineTextAlignment(.center)
+                        Text("Pick what inspires you, set a reminder, and start a streak.")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.82))
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.horizontal, 20)
+
+                    glassCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Choose your focus")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            Text("Pick up to 3 categories to shape your daily mix.")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.8))
+                            LazyVGrid(
+                                columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 2), spacing: 10
+                            ) {
+                                ForEach(categories, id: \.self) { category in
+                                    let isSelected = selectedCategories.contains(category)
+                                    Button {
+                                        toggle(category: category)
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                                .foregroundStyle(
+                                                    isSelected ? Color.green : Color.white.opacity(0.7))
+                                            Text(category)
+                                                .foregroundColor(.white)
+                                                .font(.subheadline)
+                                            Spacer()
+                                        }
+                                        .padding()
+                                        .background(.ultraThinMaterial)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                .stroke(
+                                                    LinearGradient(
+                                                        colors: [
+                                                            Color.white.opacity(0.18),
+                                                            Color.white.opacity(0.06),
+                                                        ],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    ),
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     }
-                                    .padding()
-                                    .background(.ultraThinMaterial)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                            .stroke(
-                                                LinearGradient(
-                                                    colors: [
-                                                        Color.white.opacity(0.18),
-                                                        Color.white.opacity(0.06)
-                                                    ],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                ),
-                                                lineWidth: 1
-                                            )
-                                    )
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    .disabled(!isSelected && selectedCategories.count >= 3)
+                                    .opacity(!isSelected && selectedCategories.count >= 3 ? 0.55 : 1)
                                 }
                             }
                         }
                     }
-                }
 
-                glassCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Daily reminder")
-                            .font(.headline)
-                            .foregroundColor(.white)
-
-                        Toggle(isOn: $reminderEnabled) {
-                            Text("Send me a daily quote")
+                    glassCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Daily reminder")
+                                .font(.headline)
                                 .foregroundColor(.white)
-                        }
-                        .tint(.green)
 
-                        DatePicker(
-                            "Reminder time",
-                            selection: $reminderTime,
-                            displayedComponents: .hourAndMinute
-                        )
-                        .disabled(!reminderEnabled)
-                        .foregroundColor(.white)
-                        .colorMultiply(.white)
-                    }
-                }
+                            Toggle(isOn: $reminderEnabled) {
+                                Text("Send me a daily quote")
+                                    .foregroundColor(.white)
+                            }
+                            .tint(.green)
 
-                glassCard {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Tips")
-                            .font(.headline)
+                            DatePicker(
+                                "Reminder time",
+                                selection: $reminderTime,
+                                displayedComponents: .hourAndMinute
+                            )
+                            .disabled(!reminderEnabled)
                             .foregroundColor(.white)
-                        tipRow(icon: "heart.fill", text: "Tap the heart to favorite and fill your library.")
-                        tipRow(icon: "square.and.arrow.up", text: "Share quotes with friends in two taps.")
-                        tipRow(icon: "flame.fill", text: "Keep your streak going by reading and favoriting daily.")
+                            .colorMultiply(.white)
+                        }
                     }
-                }
 
-                Spacer()
+                    glassCard {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Tips")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            tipRow(icon: "heart.fill", text: "Tap the heart to favorite and fill your library.")
+                            tipRow(icon: "square.and.arrow.up", text: "Share quotes with friends in two taps.")
+                            tipRow(icon: "flame.fill", text: "Complete a Daily Reset to build a meaningful streak.")
+                        }
+                    }
 
-                Button(action: finish) {
-                    Text("Start my day")
-                        .font(.headline)
-                        .foregroundColor(.black.opacity(0.9))
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(.thinMaterial)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.white.opacity(0.45),
-                                            Color.white.opacity(0.2)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1.2
-                                )
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .shadow(color: Color.black.opacity(0.2), radius: 16, x: 0, y: 10)
+                    Button(action: finish) {
+                        Text("Start my day")
+                            .font(.headline)
+                            .foregroundColor(.black.opacity(0.9))
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(.thinMaterial)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [
+                                                Color.white.opacity(0.45),
+                                                Color.white.opacity(0.2),
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1.2
+                                    )
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .shadow(color: Color.black.opacity(0.2), radius: 16, x: 0, y: 10)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 24)
+                .padding(.top, 20)
             }
         }
     }
 
     private func finish() {
         let comps = Calendar.current.dateComponents([.hour, .minute], from: reminderTime)
+        let orderedSelection = categories.filter { selectedCategories.contains($0) }
         let result = OnboardingResult(
-            primaryCategory: selectedCategories.first ?? defaultCategory,
+            preferredCategories: orderedSelection.isEmpty ? [defaultCategory] : orderedSelection,
             reminderEnabled: reminderEnabled,
             reminderHour: comps.hour ?? 9,
             reminderMinute: comps.minute ?? 0
@@ -205,7 +216,7 @@ struct OnboardingView: View {
     private func toggle(category: String) {
         if selectedCategories.contains(category) && selectedCategories.count > 1 {
             selectedCategories.remove(category)
-        } else {
+        } else if selectedCategories.count < 3 {
             selectedCategories.insert(category)
         }
     }
@@ -234,7 +245,7 @@ struct OnboardingView: View {
                         LinearGradient(
                             colors: [
                                 Color.white.opacity(0.35),
-                                Color.white.opacity(0.12)
+                                Color.white.opacity(0.12),
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing

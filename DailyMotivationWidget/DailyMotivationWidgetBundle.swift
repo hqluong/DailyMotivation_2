@@ -12,11 +12,5 @@ import SwiftUI
 struct DailyMotivationWidgetBundle: WidgetBundle {
     var body: some Widget {
         DailyMotivationWidget()
-        if #available(iOS 18.0, *) {
-            DailyMotivationWidgetControl()
-        }
-        if #available(iOS 16.1, *) {
-            DailyMotivationWidgetLiveActivity()
-        }
     }
 }

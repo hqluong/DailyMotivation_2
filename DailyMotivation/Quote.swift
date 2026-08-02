@@ -8,9 +8,10 @@ struct Quote: Codable, Identifiable, Hashable {
     let quote: String
     let author: String
     let category: String
+    let source: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, quote, author, category
+        case id, quote, author, category, source
     }
 
     /// Decodes a quote from JSON, preserving an explicit ID when available.
@@ -19,6 +20,7 @@ struct Quote: Codable, Identifiable, Hashable {
         self.quote = try container.decode(String.self, forKey: .quote)
         self.author = try container.decode(String.self, forKey: .author)
         self.category = (try? container.decode(String.self, forKey: .category)) ?? "General"
+        self.source = try? container.decode(String.self, forKey: .source)
         if let decodedID = try? container.decode(UUID.self, forKey: .id) {
             self.id = decodedID
         } else if
@@ -32,11 +34,18 @@ struct Quote: Codable, Identifiable, Hashable {
     }
 
     /// Manual initializer for creating quotes in code or tests.
-    init(id: UUID? = nil, quote: String, author: String, category: String = "General") {
+    init(
+        id: UUID? = nil,
+        quote: String,
+        author: String,
+        category: String = "General",
+        source: String? = nil
+    ) {
         self.id = id ?? Self.stableID(quote: quote, author: author, category: category)
         self.quote = quote
         self.author = author
         self.category = category
+        self.source = source
     }
 
     private static func stableID(quote: String, author: String, category: String) -> UUID {

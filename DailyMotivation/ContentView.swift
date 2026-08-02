@@ -6,37 +6,44 @@ import UserNotifications // <-- Import UserNotifications
 struct ContentView: View {
     // Environment
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.scenePhase) private var scenePhase
 
     // StateObjects for ViewModel and FavoritesManager
     @StateObject private var favoritesManager: FavoritesManager
     @StateObject private var engagementTracker: EngagementTracker
     @StateObject private var noteManager: NoteManager
+    @StateObject private var dailyResetManager: DailyResetManager
+    @StateObject private var personalizationManager: PersonalizationManager
     @StateObject private var viewModel: QuoteViewModel
 
     // State for navigation, sheets, notification time, and category selection
     @State private var showingFavorites = false
     @State private var isSharePresented = false
+    @State private var shareItems: [Any] = []
     @State private var showingSettings = false
     @State private var showStreakPopup = false
     @State private var hasPresentedStreakPopup = false
     @State private var showingEnhancements = false
     @State private var showingOnboarding = false
     @State private var showingNoteEditor = false
+    @State private var showingDailyReset = false
     @State private var showShareSuccessToast = false
     @State private var noteDraft: String = ""
     @State private var searchText: String = ""
     @State private var customReminders: [CustomReminder] = []
     @State private var hasLoadedCustomReminders = false
+    @State private var lastRefreshedDay: Date?
     @AppStorage("dailyReminderHour") private var dailyReminderHour: Int = 9
     @AppStorage("dailyReminderMinute") private var dailyReminderMinute: Int = 0
     @AppStorage("dailyReminderEnabled") private var dailyReminderEnabled: Bool = true
-    @AppStorage("smartMorningEnabled") private var smartMorningEnabled: Bool = true
+    @AppStorage("smartMorningEnabled") private var smartMorningEnabled: Bool = false
     @AppStorage("smartMorningHour") private var smartMorningHour: Int = 7
     @AppStorage("smartMorningMinute") private var smartMorningMinute: Int = 0
-    @AppStorage("smartEveningEnabled") private var smartEveningEnabled: Bool = true
+    @AppStorage("smartEveningEnabled") private var smartEveningEnabled: Bool = false
     @AppStorage("smartEveningHour") private var smartEveningHour: Int = 22
     @AppStorage("smartEveningMinute") private var smartEveningMinute: Int = 0
     @AppStorage("selectedQuoteCategory") private var selectedCategory: String = "All"
+    @AppStorage("preferredQuoteCategoriesData") private var preferredCategoriesData: Data = Data()
     @AppStorage("selectedThemeColorPack") private var selectedColorPackRawValue: String = ThemeColorPack.classic.rawValue
     @AppStorage("selectedFontStyle") private var selectedFontStyleRawValue: String = QuoteFontStyle.rounded.rawValue
     @AppStorage("selectedBackgroundStyle") private var selectedBackgroundStyleRawValue: String = QuoteBackgroundStyle.classic.rawValue
@@ -61,26 +68,35 @@ struct ContentView: View {
     private let fontHeightScaleFactor: CGFloat = 0.09
     private let streakPopupDisplayDuration: TimeInterval = 4.0
     private let shareSuccessToastDuration: TimeInterval = 2.4
+    private let notificationHorizonDays = NotificationManager.Identifier.quoteSequenceLength
 
     // Initializer to inject dependencies, enabling previews and tests to supply isolated stores.
     init(
         favoritesManager: FavoritesManager = FavoritesManager(),
         engagementTracker: EngagementTracker = EngagementTracker(),
-        noteManager: NoteManager = NoteManager()
+        noteManager: NoteManager = NoteManager(),
+        dailyResetManager: DailyResetManager = DailyResetManager(),
+        personalizationManager: PersonalizationManager = PersonalizationManager()
     ) {
         let favManager = favoritesManager
         let tracker = engagementTracker
         let noteMgr = noteManager
+        let resetManager = dailyResetManager
+        let personalization = personalizationManager
         _favoritesManager = StateObject(wrappedValue: favManager)
         _engagementTracker = StateObject(wrappedValue: tracker)
         _noteManager = StateObject(wrappedValue: noteMgr)
+        _dailyResetManager = StateObject(wrappedValue: resetManager)
+        _personalizationManager = StateObject(wrappedValue: personalization)
         _viewModel = StateObject(wrappedValue: QuoteViewModel(favoritesManager: favManager, engagementTracker: tracker))
     }
 
     private func preferredNotificationCategories() -> [String] {
-        var ordered: [String] = []
+        var ordered = storedPreferredCategories()
         if selectedCategory != "All" {
-            ordered.append(selectedCategory)
+            if !ordered.contains(selectedCategory) {
+                ordered.insert(selectedCategory, at: 0)
+            }
         }
 
         let favoriteCategories = favoritesManager
@@ -90,38 +106,63 @@ struct ContentView: View {
             ordered.append(category)
         }
 
+        let learnedCategories = personalizationManager.rankedCategories(
+            availableCategories: availableCategories().filter { $0 != "All" }
+        )
+        for category in learnedCategories
+        where personalizationManager.categoryScores[category, default: 0] > 0 && !ordered.contains(category) {
+            ordered.append(category)
+        }
+
         return ordered
     }
 
-    private func buildNotificationQuotes() -> (daily: Quote, morning: Quote?, evening: Quote?)? {
-        guard let dailyQuote = viewModel.getDailyQuote() else { return nil }
-        var usedIDs: Set<UUID> = [dailyQuote.id]
-        let preferredCategories = preferredNotificationCategories()
-
-        let morningQuote = viewModel.preferredRandomQuote(
-            preferredCategories: preferredCategories,
-            excludingIDs: usedIDs
-        )
-        if let morningQuote {
-            usedIDs.insert(morningQuote.id)
+    private func storedPreferredCategories() -> [String] {
+        guard
+            !preferredCategoriesData.isEmpty,
+            let decoded = try? JSONDecoder().decode([String].self, from: preferredCategoriesData)
+        else {
+            return selectedCategory == "All" ? [] : [selectedCategory]
         }
 
-        let eveningQuote = viewModel.preferredRandomQuote(
-            preferredCategories: preferredCategories,
-            excludingIDs: usedIDs
-        )
+        let available = Set(availableCategories().filter { $0 != "All" })
+        return decoded.filter { available.contains($0) }
+    }
 
-        return (dailyQuote, morningQuote, eveningQuote)
+    private func persistPreferredCategories(_ categories: [String]) {
+        let available = Set(availableCategories().filter { $0 != "All" })
+        let sanitized = Array(categories.filter { available.contains($0) }.prefix(3))
+        preferredCategoriesData = (try? JSONEncoder().encode(sanitized)) ?? Data()
+    }
+
+    private func migratePreferredCategoriesIfNeeded() {
+        guard preferredCategoriesData.isEmpty, selectedCategory != "All" else { return }
+        persistPreferredCategories([selectedCategory])
+    }
+
+    private func buildNotificationQuotes() -> (daily: [Quote], morning: [Quote], evening: [Quote])? {
+        let preferredCategories = preferredNotificationCategories()
+        let planned = viewModel.plannedQuotes(
+            count: notificationHorizonDays * 3,
+            preferredCategories: preferredCategories
+        )
+        guard !planned.isEmpty else { return nil }
+
+        return (
+            daily: stride(from: 0, to: planned.count, by: 3).map { planned[$0] },
+            morning: stride(from: 1, to: planned.count, by: 3).map { planned[$0] },
+            evening: stride(from: 2, to: planned.count, by: 3).map { planned[$0] }
+        )
     }
 
     private func scheduleNotifications(
-        dailyQuote: Quote,
-        morningQuote: Quote?,
-        eveningQuote: Quote?
+        dailyQuotes: [Quote],
+        morningQuotes: [Quote],
+        eveningQuotes: [Quote]
     ) {
         if dailyReminderEnabled {
-            NotificationManager.shared.scheduleDailyQuoteNotification(
-                quote: dailyQuote,
+            NotificationManager.shared.scheduleDailyQuoteNotifications(
+                quotes: dailyQuotes,
                 hour: dailyReminderHour,
                 minute: dailyReminderMinute
             )
@@ -130,19 +171,21 @@ struct ContentView: View {
         }
 
         NotificationManager.shared.scheduleSmartNotifications(
-            morningQuote: morningQuote,
+            morningQuotes: morningQuotes,
             morningEnabled: smartMorningEnabled,
             morningHour: smartMorningHour,
             morningMinute: smartMorningMinute,
-            eveningQuote: eveningQuote,
+            eveningQuotes: eveningQuotes,
             eveningEnabled: smartEveningEnabled,
             eveningHour: smartEveningHour,
             eveningMinute: smartEveningMinute
         )
 
-        NotificationManager.shared.updateReminders(
-            customReminders.map { $0.asNotification(quote: dailyQuote) }
-        )
+        if let referenceQuote = dailyQuotes.first {
+            NotificationManager.shared.updateReminders(
+                customReminders.map { $0.asNotification(quote: referenceQuote) }
+            )
+        }
     }
 
     private func scheduleNotificationsIfPossible() {
@@ -151,10 +194,71 @@ struct ContentView: View {
             return
         }
         scheduleNotifications(
-            dailyQuote: quotes.daily,
-            morningQuote: quotes.morning,
-            eveningQuote: quotes.evening
+            dailyQuotes: quotes.daily,
+            morningQuotes: quotes.morning,
+            eveningQuotes: quotes.evening
         )
+    }
+
+    private func updateNotificationSchedule(requestAuthorizationIfNeeded: Bool = false) {
+        NotificationManager.shared.getAuthorizationStatus { status in
+            switch status {
+            case .authorized, .provisional, .ephemeral:
+                scheduleNotificationsIfPossible()
+            case .notDetermined where requestAuthorizationIfNeeded:
+                NotificationManager.shared.requestAuthorization { granted in
+                    if granted {
+                        scheduleNotificationsIfPossible()
+                    }
+                }
+            case .notDetermined, .denied:
+                break
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    private func refreshDailyContentIfNeeded(now: Date = Date()) {
+        let today = Calendar.current.startOfDay(for: now)
+        guard lastRefreshedDay.map({ !Calendar.current.isDate($0, inSameDayAs: today) }) ?? true else {
+            return
+        }
+
+        if lastRefreshedDay != nil {
+            viewModel.setCurrentQuoteToDaily()
+            syncNoteDraftWithCurrentQuote()
+        }
+        lastRefreshedDay = today
+    }
+
+    private func resetAllLocalData() {
+        NotificationManager.shared.cancelAllManagedReminders()
+        NotificationManager.shared.cancelNotifications()
+        favoritesManager.resetAll()
+        noteManager.resetAll()
+        dailyResetManager.resetAll()
+        personalizationManager.resetAll()
+        engagementTracker.resetAll()
+
+        customReminders = []
+        customRemindersData = Data()
+        dailyReminderEnabled = false
+        smartMorningEnabled = false
+        smartEveningEnabled = false
+        selectedCategory = "All"
+        preferredCategoriesData = Data()
+        selectedColorPackRawValue = ThemeColorPack.classic.rawValue
+        selectedFontStyleRawValue = QuoteFontStyle.rounded.rawValue
+        selectedBackgroundStyleRawValue = QuoteBackgroundStyle.classic.rawValue
+        hasCompletedOnboarding = false
+        lastRefreshedDay = nil
+        viewModel.setCurrentQuoteToDaily()
+        showingSettings = false
+
+        DispatchQueue.main.async {
+            showingOnboarding = true
+        }
     }
 
     private func loadCustomRemindersIfNeeded() {
@@ -168,7 +272,7 @@ struct ContentView: View {
 
         do {
             let decoded = try JSONDecoder().decode([CustomReminder].self, from: customRemindersData)
-            customReminders = decoded
+            customReminders = Array(decoded.prefix(NotificationManager.Identifier.maximumFlexibleReminderCount))
         } catch {
             customReminders = []
         }
@@ -204,22 +308,31 @@ struct ContentView: View {
     }
 
     private func shareInviteMessage(for quote: Quote) -> String {
-        let streak = engagementTracker.summary.currentStreak
-        let streakLine: String
-        if streak > 1 {
-            streakLine = "I'm on a \(streak)-day streak in Daily Motivation."
-        } else {
-            streakLine = "This quote from Daily Motivation helped me reset today."
+        ShareInviteMessageBuilder.message(
+            for: quote,
+            currentStreak: engagementTracker.summary.currentStreak
+        )
+    }
+
+    private func prepareShare(
+        for quote: Quote,
+        colorPack: ThemeColorPack,
+        fontStyle: QuoteFontStyle,
+        backgroundStyle: QuoteBackgroundStyle
+    ) {
+        var items: [Any] = []
+        if let image = QuoteShareCardRenderer.render(
+            quote: quote,
+            colorPack: colorPack,
+            fontStyle: fontStyle,
+            backgroundStyle: backgroundStyle
+        ) {
+            items.append(image)
         }
-
-        return """
-        Join me for a 7-day motivation challenge in Daily Motivation:
-        https://apps.apple.com/us/search?term=Daily%20Motivation
-
-        \(streakLine)
-        \"\(quote.quote)\"
-        - \(quote.author)
-        """
+        items.append(shareInviteMessage(for: quote))
+        shareItems = items
+        engagementTracker.logShareClicked()
+        isSharePresented = true
     }
 
     private func presentStreakPopupTemporarily() {
@@ -293,9 +406,16 @@ struct ContentView: View {
                     }
 
                     Button {
-                        viewModel.showNewRandomQuote(
-                            category: selectedCategory == "All" ? nil : selectedCategory
-                        )
+                        if let currentQuote = viewModel.currentQuote {
+                            personalizationManager.recordSkipped(currentQuote)
+                        }
+                        if selectedCategory == "All" {
+                            viewModel.showNewPreferredQuote(
+                                preferredCategories: preferredNotificationCategories()
+                            )
+                        } else {
+                            viewModel.showNewRandomQuote(category: selectedCategory)
+                        }
                     } label: {
                         Label("Surprise me", systemImage: "sparkles")
                             .font(.headline)
@@ -452,15 +572,26 @@ struct ContentView: View {
             safeAreaInsets: geometry.safeAreaInsets,
             verticalSizeClass: verticalSizeClass,
             categories: categories,
+            preferredCategories: preferredNotificationCategories(),
             selectedCategory: $selectedCategory,
             searchText: $searchText,
             showStreakPopup: $showStreakPopup,
-            isSharePresented: $isSharePresented,
+            onShare: { quote in
+                prepareShare(
+                    for: quote,
+                    colorPack: colorPack,
+                    fontStyle: fontStyle,
+                    backgroundStyle: QuoteBackgroundStyle(rawValue: selectedBackgroundStyleRawValue) ?? .classic
+                )
+            },
             engagementTracker: engagementTracker,
+            dailyResetManager: dailyResetManager,
+            personalizationManager: personalizationManager,
             viewModel: viewModel,
             favoritesManager: favoritesManager,
             noteManager: noteManager,
             showingNoteEditor: $showingNoteEditor,
+            showingDailyReset: $showingDailyReset,
             noteDraft: $noteDraft,
             fontStyle: fontStyle,
             colorPack: colorPack,
@@ -528,47 +659,37 @@ struct ContentView: View {
     @ViewBuilder
     private func onboardingFlow() -> some View {
         let onboardingCategories = availableCategories().filter { $0 != "All" }
+        let defaultCategory = onboardingCategories.contains("Motivation")
+            ? "Motivation"
+            : onboardingCategories.first ?? "Focus"
         OnboardingView(
             categories: onboardingCategories.isEmpty ? ["Focus", "Gratitude", "Resilience"] : onboardingCategories,
-            defaultCategory: onboardingCategories.first ?? "Focus",
+            defaultCategory: defaultCategory,
             defaultReminderHour: dailyReminderHour,
             defaultReminderMinute: dailyReminderMinute
         ) { result in
-            let chosenCategory = result.primaryCategory ?? "All"
-            if availableCategories().contains(chosenCategory) {
-                selectedCategory = chosenCategory
-            } else {
-                selectedCategory = "All"
-            }
+            persistPreferredCategories(result.preferredCategories)
+            selectedCategory = "All"
             dailyReminderHour = result.reminderHour
             dailyReminderMinute = result.reminderMinute
             dailyReminderEnabled = result.reminderEnabled
             hasCompletedOnboarding = true
             showingOnboarding = false
-            viewModel.showNewRandomQuote(
-                category: selectedCategory == "All" ? nil : selectedCategory
+            viewModel.showNewPreferredQuote(
+                preferredCategories: result.preferredCategories
             )
-            NotificationManager.shared.requestAuthorization { granted in
-                if granted {
-                    scheduleNotificationsIfPossible()
-                }
+            if result.reminderEnabled {
+                updateNotificationSchedule(requestAuthorizationIfNeeded: true)
             }
             presentStreakPopupTemporarily()
         }
-        .ignoresSafeArea()
     }
 
     @ViewBuilder
     private func streakOverlay(colorPack: ThemeColorPack) -> some View {
         if showStreakPopup {
             StreakHeaderView(summary: engagementTracker.summary, colorPack: colorPack) {
-                if let dailyQuote = viewModel.getDailyQuote() {
-                    NotificationManager.shared.scheduleDailyQuoteNotification(
-                        quote: dailyQuote,
-                        hour: dailyReminderHour,
-                        minute: dailyReminderMinute
-                    )
-                }
+                updateNotificationSchedule(requestAuthorizationIfNeeded: true)
                 withAnimation(.easeInOut(duration: 0.25)) {
                     showStreakPopup = false
                 }
@@ -639,7 +760,9 @@ struct ContentView: View {
                 FavoritesView(
                     viewModel: viewModel,
                     favoritesManager: favoritesManager,
-                    engagementTracker: engagementTracker
+                    engagementTracker: engagementTracker,
+                    noteManager: noteManager,
+                    dailyResetManager: dailyResetManager
                 )
             }
             .toolbarColorScheme(navigationBarColorScheme, for: .navigationBar)
@@ -648,9 +771,9 @@ struct ContentView: View {
 
         let contentWithSheets = contentWithNavigation
             .sheet(isPresented: $isSharePresented) {
-                if let currentQuote = viewModel.currentQuote {
+                if !shareItems.isEmpty {
                     ActivityView(
-                        activityItems: [shareInviteMessage(for: currentQuote)],
+                        activityItems: shareItems,
                         onComplete: { completed in
                             guard completed else { return }
                             DispatchQueue.main.async {
@@ -677,6 +800,14 @@ struct ContentView: View {
                     )
                 }
             }
+            .sheet(isPresented: $showingDailyReset) {
+                DailyResetView(
+                    manager: dailyResetManager,
+                    viewModel: viewModel,
+                    engagementTracker: engagementTracker,
+                    preferredCategories: storedPreferredCategories()
+                )
+            }
             .sheet(isPresented: $showingSettings) {
                 SettingsView(
                     dailyReminderHour: $dailyReminderHour,
@@ -691,7 +822,8 @@ struct ContentView: View {
                     selectedThemeColorPack: $selectedColorPackRawValue,
                     selectedFontStyle: $selectedFontStyleRawValue,
                     selectedBackgroundStyle: $selectedBackgroundStyleRawValue,
-                    customReminders: $customReminders
+                    customReminders: $customReminders,
+                    onResetAllData: resetAllLocalData
                 )
             }
             .sheet(isPresented: $showingEnhancements) {
@@ -715,6 +847,8 @@ struct ContentView: View {
             contentWithSheets
             .onAppear {
                 loadCustomRemindersIfNeeded()
+                migratePreferredCategoriesIfNeeded()
+                refreshDailyContentIfNeeded()
                 if viewModel.currentQuote == nil && viewModel.errorMessage == nil {
                     viewModel.setCurrentQuoteToDaily()
                 }
@@ -728,41 +862,47 @@ struct ContentView: View {
                     presentStreakPopupTemporarily()
                 }
 
-                viewModel.recordDailyQuoteView()
-
-                UNUserNotificationCenter.current().getNotificationSettings { settings in
-                    switch settings.authorizationStatus {
-                    case .notDetermined:
-                        NotificationManager.shared.requestAuthorization { granted in
-                            if granted {
-                                scheduleNotificationsIfPossible()
-                            }
-                        }
-                    case .authorized:
-                        scheduleNotificationsIfPossible()
-                    case .denied, .provisional, .ephemeral:
-                        print("Notification permission not granted or restricted.")
-                        break
-                    @unknown default:
-                        break
-                    }
+                if hasCompletedOnboarding {
+                    viewModel.recordDailyQuoteView()
                 }
+                updateNotificationSchedule()
             }
-            .onChange(of: dailyReminderHour) { _ in scheduleNotificationsIfPossible() }
-            .onChange(of: dailyReminderMinute) { _ in scheduleNotificationsIfPossible() }
-            .onChange(of: dailyReminderEnabled) { _ in scheduleNotificationsIfPossible() }
-            .onChange(of: smartMorningEnabled) { _ in scheduleNotificationsIfPossible() }
-            .onChange(of: smartMorningHour) { _ in scheduleNotificationsIfPossible() }
-            .onChange(of: smartMorningMinute) { _ in scheduleNotificationsIfPossible() }
-            .onChange(of: smartEveningEnabled) { _ in scheduleNotificationsIfPossible() }
-            .onChange(of: smartEveningHour) { _ in scheduleNotificationsIfPossible() }
-            .onChange(of: smartEveningMinute) { _ in scheduleNotificationsIfPossible() }
-            .onChange(of: selectedCategory) { _ in scheduleNotificationsIfPossible() }
+            .onChange(of: scenePhase) { phase in
+                guard phase == .active else { return }
+                refreshDailyContentIfNeeded()
+                updateNotificationSchedule()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
+                refreshDailyContentIfNeeded()
+                updateNotificationSchedule()
+            }
+            .onChange(of: dailyReminderHour) { _ in updateNotificationSchedule() }
+            .onChange(of: dailyReminderMinute) { _ in updateNotificationSchedule() }
+            .onChange(of: dailyReminderEnabled) { enabled in
+                updateNotificationSchedule(requestAuthorizationIfNeeded: enabled)
+            }
+            .onChange(of: smartMorningEnabled) { enabled in
+                updateNotificationSchedule(requestAuthorizationIfNeeded: enabled)
+            }
+            .onChange(of: smartMorningHour) { _ in updateNotificationSchedule() }
+            .onChange(of: smartMorningMinute) { _ in updateNotificationSchedule() }
+            .onChange(of: smartEveningEnabled) { enabled in
+                updateNotificationSchedule(requestAuthorizationIfNeeded: enabled)
+            }
+            .onChange(of: smartEveningHour) { _ in updateNotificationSchedule() }
+            .onChange(of: smartEveningMinute) { _ in updateNotificationSchedule() }
+            .onChange(of: selectedCategory) { _ in updateNotificationSchedule() }
+            .onChange(of: preferredCategoriesData) { _ in updateNotificationSchedule() }
+            .onChange(of: personalizationManager.categoryScores) { _ in
+                updateNotificationSchedule()
+            }
             .onChange(of: viewModel.currentQuote?.id) { _ in syncNoteDraftWithCurrentQuote() }
             .onChange(of: customReminders) { _ in
                 guard hasLoadedCustomReminders else { return }
                 persistCustomReminders()
-                scheduleNotificationsIfPossible()
+                updateNotificationSchedule(
+                    requestAuthorizationIfNeeded: customReminders.contains(where: { $0.isEnabled })
+                )
             }
         }
     } // End body
@@ -774,15 +914,19 @@ private struct QuoteLayoutView: View {
     let safeAreaInsets: EdgeInsets
     let verticalSizeClass: UserInterfaceSizeClass?
     let categories: [String]
+    let preferredCategories: [String]
     @Binding var selectedCategory: String
     @Binding var searchText: String
     @Binding var showStreakPopup: Bool
-    @Binding var isSharePresented: Bool
+    let onShare: (Quote) -> Void
     @ObservedObject var engagementTracker: EngagementTracker
+    @ObservedObject var dailyResetManager: DailyResetManager
+    @ObservedObject var personalizationManager: PersonalizationManager
     @ObservedObject var viewModel: QuoteViewModel
     @ObservedObject var favoritesManager: FavoritesManager
     @ObservedObject var noteManager: NoteManager
     @Binding var showingNoteEditor: Bool
+    @Binding var showingDailyReset: Bool
     @Binding var noteDraft: String
     let fontStyle: QuoteFontStyle
     let colorPack: ThemeColorPack
@@ -790,6 +934,17 @@ private struct QuoteLayoutView: View {
     let minQuoteFontSize: CGFloat
     let maxQuoteFontSize: CGFloat
     let fontHeightScaleFactor: CGFloat
+
+    private func showNextQuote(categoryFilter: String?) {
+        if let currentQuote = viewModel.currentQuote {
+            personalizationManager.recordSkipped(currentQuote)
+        }
+        if let categoryFilter {
+            viewModel.showNewRandomQuote(category: categoryFilter)
+        } else {
+            viewModel.showNewPreferredQuote(preferredCategories: preferredCategories)
+        }
+    }
 
     var body: some View {
         let isCompactHeight = (verticalSizeClass == .compact) || size.width > size.height
@@ -799,7 +954,7 @@ private struct QuoteLayoutView: View {
         let baseTopPadding: CGFloat = isCompactHeight ? 28 : 12
         let effectiveTopPadding = baseTopPadding + safeTopInset
         let bottomPadding: CGFloat = safeAreaInsets.bottom + (isCompactHeight ? 18 : 20)
-        let quoteHeightFactor: CGFloat = isCompactHeight ? 0.54 : 0.75
+        let quoteHeightFactor: CGFloat = isCompactHeight ? 0.48 : 0.62
         let quoteAreaMaxHeight = size.height * quoteHeightFactor
         let cardMinHeightMultiplier: CGFloat = isCompactHeight ? 0.66 : 0.9
         let adjustedFontScale = fontHeightScaleFactor * (isCompactHeight ? 0.85 : 1.0)
@@ -879,6 +1034,10 @@ private struct QuoteLayoutView: View {
                 }
 
                 if let quoteForButtons = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
+                    dailyResetButton(
+                        isPhotoBackground: isPhotoBackground,
+                        horizontalPadding: horizontalPadding
+                    )
                     actionButtons(
                         quote: quoteForButtons,
                         categoryFilter: categoryFilter,
@@ -933,6 +1092,10 @@ private struct QuoteLayoutView: View {
                 }
 
                 if let quoteForButtons = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
+                    dailyResetButton(
+                        isPhotoBackground: isPhotoBackground,
+                        horizontalPadding: horizontalPadding
+                    )
                     actionButtons(
                         quote: quoteForButtons,
                         categoryFilter: categoryFilter,
@@ -1041,6 +1204,33 @@ private struct QuoteLayoutView: View {
 
     // MARK: - Subviews
     @ViewBuilder
+    private func dailyResetButton(
+        isPhotoBackground: Bool,
+        horizontalPadding: CGFloat
+    ) -> some View {
+        let isCompleted = dailyResetManager.entry()?.isCompleted == true
+        Button {
+            showingDailyReset = true
+        } label: {
+            Label(
+                isCompleted ? "Today's reset complete" : "Start today's reset",
+                systemImage: isCompleted ? "checkmark.circle.fill" : "sparkles"
+            )
+            .font(.subheadline.bold())
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 11)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(colorPack.accentColor.opacity(isPhotoBackground ? 0.72 : 0.9))
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, horizontalPadding)
+        .accessibilityHint(isCompleted ? "Opens today's reflection" : "Choose a need, reflect, and commit to one small action")
+    }
+
+    @ViewBuilder
     private func quoteCard(
         quote: Quote,
         quoteAreaMaxHeight: CGFloat,
@@ -1096,7 +1286,7 @@ private struct QuoteLayoutView: View {
         .animation(.easeInOut(duration: 0.5), value: quote.id)
         .id(quote.id)
         .onTapGesture {
-            viewModel.showNewRandomQuote(category: selectedCategory == "All" ? nil : selectedCategory)
+            showNextQuote(categoryFilter: selectedCategory == "All" ? nil : selectedCategory)
         }
         .padding(.horizontal, horizontalPadding)
     }
@@ -1140,7 +1330,10 @@ private struct QuoteLayoutView: View {
             )
 
             Button {
-                viewModel.toggleFavorite(for: quote)
+                let isNowFavorite = viewModel.toggleFavorite(for: quote)
+                if isNowFavorite {
+                    personalizationManager.recordSaved(quote)
+                }
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: isFavorite ? "heart.fill" : "heart")
@@ -1163,8 +1356,7 @@ private struct QuoteLayoutView: View {
             }
 
             Button {
-                engagementTracker.logShareClicked()
-                isSharePresented = true
+                onShare(quote)
             } label: {
                 Label("Share", systemImage: "square.and.arrow.up")
                     .font(.caption.bold())
@@ -1207,17 +1399,17 @@ struct StreakHeaderView: View {
 
             StreakHistoryRow(history: summary.recentHistory, colorPack: colorPack)
 
-            if let lastViewed = summary.lastViewed {
-                Text("Last read \(lastViewed, format: .relative(presentation: .numeric))")
+            if let lastReset = summary.lastResetCompleted {
+                Text("Last reset \(lastReset, format: .relative(presentation: .numeric))")
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.8))
             } else {
-                Text("Read today's quote to start your streak!")
+                Text("Complete today's reset to start your streak.")
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.8))
             }
 
-            if summary.needsReminderNudge, summary.lastViewed != nil {
+            if summary.needsReminderNudge, summary.lastResetCompleted != nil {
                 Button(action: onReminderAction) {
                     HStack(spacing: 6) {
                         Image(systemName: "bell.badge.fill")
@@ -1263,8 +1455,8 @@ struct StreakHistoryRow: View {
                                 .fill(color(for: day))
                                 .frame(width: 14, height: 14)
 
-                            if day.favorited && day.viewed {
-                                Image(systemName: "star.fill")
+                            if day.resetCompleted {
+                                Image(systemName: "checkmark")
                                     .font(.system(size: 8))
                                     .foregroundColor(.white)
                             }
@@ -1281,7 +1473,7 @@ struct StreakHistoryRow: View {
     }
 
     private func color(for day: EngagementTracker.DailyEngagement) -> Color {
-        if day.viewed && day.favorited {
+        if day.resetCompleted {
             return colorPack.accentColor
         } else if day.viewed {
             return colorPack.secondaryAccent.opacity(0.9)
@@ -1296,16 +1488,19 @@ struct StreakHistoryRow: View {
 
     private func historyAccessibility(for day: EngagementTracker.DailyEngagement) -> String {
         let weekday = StreakHistoryRow.accessibilityFormatter.string(from: day.date)
-        switch (day.viewed, day.favorited) {
-        case (true, true):
-            return "\(weekday): viewed and favorited"
-        case (true, false):
-            return "\(weekday): viewed"
-        case (false, true):
-            return "\(weekday): favorited"
-        default:
-            return "\(weekday): no activity"
+        if day.resetCompleted {
+            return "\(weekday): daily reset completed"
         }
+        if day.viewed && day.favorited {
+            return "\(weekday): viewed and favorited"
+        }
+        if day.viewed {
+            return "\(weekday): viewed"
+        }
+        if day.favorited {
+            return "\(weekday): favorited"
+        }
+        return "\(weekday): no activity"
     }
 
     private static let accessibilityFormatter: DateFormatter = {
@@ -1567,7 +1762,9 @@ struct SettingsView: View {
     @Binding var selectedFontStyle: String
     @Binding var selectedBackgroundStyle: String
     @Binding var customReminders: [CustomReminder]
+    let onResetAllData: () -> Void
     @Environment(\.dismiss) private var dismiss
+    @State private var showingResetConfirmation = false
 
     // Helper to create a Date from hour/minute
     private var reminderTime: Date {
@@ -1687,10 +1884,16 @@ struct SettingsView: View {
                         .padding(.vertical, 4)
                     }
 
-                    Button {
-                        addCustomReminder()
-                    } label: {
-                        Label("Add reminder", systemImage: "plus.circle.fill")
+                    if customReminders.count < NotificationManager.Identifier.maximumFlexibleReminderCount {
+                        Button {
+                            addCustomReminder()
+                        } label: {
+                            Label("Add reminder", systemImage: "plus.circle.fill")
+                        }
+                    } else {
+                        Text("Up to \(NotificationManager.Identifier.maximumFlexibleReminderCount) custom reminders are supported.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -1728,6 +1931,25 @@ struct SettingsView: View {
                     )
                     .padding(.top, 6)
                 }
+
+                Section(header: Text("Privacy and Support")) {
+                    Label("Your data stays on this device", systemImage: "lock.shield.fill")
+                    Link(
+                        destination: URL(string: "mailto:luohung1512@icloud.com")!
+                    ) {
+                        Label("Contact support", systemImage: "envelope")
+                    }
+                    Link(
+                        destination: URL(string: "https://apps.apple.com/app/id6756123822?action=write-review")!
+                    ) {
+                        Label("Rate Daily Motivation", systemImage: "star")
+                    }
+                    Button(role: .destructive) {
+                        showingResetConfirmation = true
+                    } label: {
+                        Label("Reset all local data", systemImage: "trash")
+                    }
+                }
             }
             .navigationTitle("Settings")
             .toolbar {
@@ -1735,10 +1957,21 @@ struct SettingsView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .confirmationDialog(
+                "Reset all local data?",
+                isPresented: $showingResetConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Reset all data", role: .destructive, action: onResetAllData)
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This removes favorites, notes, Daily Resets, streaks, preferences, and reminders from this device.")
+            }
         }
     }
 
     private func addCustomReminder() {
+        guard customReminders.count < NotificationManager.Identifier.maximumFlexibleReminderCount else { return }
         customReminders.append(
             CustomReminder(
                 title: "Daily Motivation",

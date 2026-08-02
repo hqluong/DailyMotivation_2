@@ -24,6 +24,19 @@ final class NotificationManager {
         static let morningBoost = "smartMorningNotification"
         static let windDown = "smartWindDownNotification"
         static let flexibleReminderPrefix = "quoteReminder"
+        static let quoteSequenceLength = 7
+        static let managedQuoteSequenceSlotCount = 14
+        static let maximumFlexibleReminderCount = 6
+
+        static func quoteSequenceRequestIdentifier(base: String, index: Int) -> String {
+            "\(base).scheduled.\(index)"
+        }
+
+        static func quoteSequenceRequestIdentifiers(base: String) -> [String] {
+            (0..<managedQuoteSequenceSlotCount).map {
+                quoteSequenceRequestIdentifier(base: base, index: $0)
+            }
+        }
 
         static func reminderRequestIdentifier(for schedule: ReminderSchedule, weekday: ReminderWeekday) -> String {
             reminderRequestIdentifier(forLogicalID: schedule.id, weekday: weekday)
@@ -164,6 +177,17 @@ final class NotificationManager {
         )
     }
 
+    /// Schedules a seven-quote weekly rotation that continues without reopening the app.
+    func scheduleDailyQuoteNotifications(quotes: [Quote], hour: Int, minute: Int) {
+        scheduleQuoteNotificationSequence(
+            identifier: Identifier.daily,
+            title: "Daily Motivation",
+            quotes: quotes,
+            hour: hour,
+            minute: minute
+        )
+    }
+
     /// Schedules optional "Smart" notifications (e.g., morning boost and wind down).
     func scheduleSmartNotifications(
         morningQuote: Quote?,
@@ -200,6 +224,42 @@ final class NotificationManager {
         }
     }
 
+    /// Schedules rotating morning and evening quote sequences.
+    func scheduleSmartNotifications(
+        morningQuotes: [Quote],
+        morningEnabled: Bool,
+        morningHour: Int,
+        morningMinute: Int,
+        eveningQuotes: [Quote],
+        eveningEnabled: Bool,
+        eveningHour: Int,
+        eveningMinute: Int
+    ) {
+        if morningEnabled {
+            scheduleQuoteNotificationSequence(
+                identifier: Identifier.morningBoost,
+                title: "Morning Boost",
+                quotes: morningQuotes,
+                hour: morningHour,
+                minute: morningMinute
+            )
+        } else {
+            cancelNotifications(identifiers: [Identifier.morningBoost])
+        }
+
+        if eveningEnabled {
+            scheduleQuoteNotificationSequence(
+                identifier: Identifier.windDown,
+                title: "Wind Down",
+                quotes: eveningQuotes,
+                hour: eveningHour,
+                minute: eveningMinute
+            )
+        } else {
+            cancelNotifications(identifiers: [Identifier.windDown])
+        }
+    }
+
     /// Cancels legacy notifications and optionally any flexible reminder IDs passed in.
     func cancelNotifications(identifiers: [String]? = nil) {
         if let identifiers {
@@ -214,7 +274,10 @@ final class NotificationManager {
                 Identifier.daily,
                 Identifier.morningBoost,
                 Identifier.windDown
-            ] + managedFlexibleIDs)
+            ] + Identifier.quoteSequenceRequestIdentifiers(base: Identifier.daily)
+                + Identifier.quoteSequenceRequestIdentifiers(base: Identifier.morningBoost)
+                + Identifier.quoteSequenceRequestIdentifiers(base: Identifier.windDown)
+                + managedFlexibleIDs)
 
             self.center.removePendingNotificationRequests(withIdentifiers: requestIdentifiers)
             self.center.removeAllDeliveredNotifications()
@@ -234,6 +297,8 @@ final class NotificationManager {
         let minute: Int
         let weekday: ReminderWeekday?
         let playsSound: Bool
+        let fireDate: Date?
+        let repeats: Bool
     }
 
     private struct PreparedReminderBatch {
@@ -256,10 +321,53 @@ final class NotificationManager {
             hour: min(max(hour, 0), 23),
             minute: min(max(minute, 0), 59),
             weekday: nil,
-            playsSound: true
+            playsSound: true,
+            fireDate: nil,
+            repeats: true
         )
 
-        replaceScheduledRequests(with: [plan], removing: [identifier])
+        replaceScheduledRequests(
+            with: [plan],
+            removing: [identifier] + Identifier.quoteSequenceRequestIdentifiers(base: identifier)
+        )
+    }
+
+    private func scheduleQuoteNotificationSequence(
+        identifier: String,
+        title: String,
+        quotes: [Quote],
+        hour: Int,
+        minute: Int,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) {
+        let sequenceIDs = Identifier.quoteSequenceRequestIdentifiers(base: identifier)
+        let identifiersToRemove = [identifier] + sequenceIDs
+        let limitedQuotes = Array(quotes.prefix(Identifier.quoteSequenceLength))
+        let weekdays = Self.upcomingDeliveryWeekdays(
+            count: limitedQuotes.count,
+            hour: hour,
+            minute: minute,
+            now: now,
+            calendar: calendar
+        )
+
+        let plans = zip(limitedQuotes, weekdays).enumerated().map { index, pair in
+            let (quote, weekday) = pair
+            return ScheduledRequestPlan(
+                identifier: Identifier.quoteSequenceRequestIdentifier(base: identifier, index: index),
+                title: title,
+                body: "\"\(quote.quote)\" - \(quote.author)",
+                hour: min(max(hour, 0), 23),
+                minute: min(max(minute, 0), 59),
+                weekday: weekday,
+                playsSound: true,
+                fireDate: nil,
+                repeats: true
+            )
+        }
+
+        replaceScheduledRequests(with: plans, removing: identifiersToRemove)
     }
 
     private func prepareReminderBatch(_ reminders: [ReminderNotification]) -> PreparedReminderBatch {
@@ -267,7 +375,7 @@ final class NotificationManager {
         var requestPlans: [ScheduledRequestPlan] = []
         var failures: [String: String] = [:]
 
-        for reminder in reminders {
+        for reminder in reminders.prefix(Identifier.maximumFlexibleReminderCount) {
             let logicalID = reminder.schedule.id.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !logicalID.isEmpty else {
                 failures["<empty>"] = "Reminder identifier must not be empty."
@@ -289,7 +397,9 @@ final class NotificationManager {
                         hour: reminder.schedule.hour,
                         minute: reminder.schedule.minute,
                         weekday: weekday,
-                        playsSound: reminder.playsSound
+                        playsSound: reminder.playsSound,
+                        fireDate: nil,
+                        repeats: true
                     )
                 )
             }
@@ -387,17 +497,29 @@ final class NotificationManager {
     }
 
     private func makeNotificationRequest(from requestPlan: ScheduledRequestPlan) -> UNNotificationRequest {
-        var dateComponents = DateComponents()
-        dateComponents.hour = requestPlan.hour
-        dateComponents.minute = requestPlan.minute
-        dateComponents.weekday = requestPlan.weekday?.rawValue
+        let dateComponents: DateComponents
+        if let fireDate = requestPlan.fireDate {
+            dateComponents = Calendar.current.dateComponents(
+                [.year, .month, .day, .hour, .minute],
+                from: fireDate
+            )
+        } else {
+            var repeatingComponents = DateComponents()
+            repeatingComponents.hour = requestPlan.hour
+            repeatingComponents.minute = requestPlan.minute
+            repeatingComponents.weekday = requestPlan.weekday?.rawValue
+            dateComponents = repeatingComponents
+        }
 
         let content = UNMutableNotificationContent()
         content.title = requestPlan.title
         content.body = requestPlan.body
         content.sound = requestPlan.playsSound ? .default : nil
 
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+        let trigger = UNCalendarNotificationTrigger(
+            dateMatching: dateComponents,
+            repeats: requestPlan.repeats
+        )
         return UNNotificationRequest(identifier: requestPlan.identifier, content: content, trigger: trigger)
     }
 
@@ -414,6 +536,10 @@ final class NotificationManager {
                 requestIdentifiers.append(trimmedIdentifier)
             } else {
                 requestIdentifiers.append(contentsOf: Identifier.allReminderRequestIdentifiers(forLogicalID: trimmedIdentifier))
+            }
+
+            if [Identifier.daily, Identifier.morningBoost, Identifier.windDown].contains(trimmedIdentifier) {
+                requestIdentifiers.append(contentsOf: Identifier.quoteSequenceRequestIdentifiers(base: trimmedIdentifier))
             }
         }
 
@@ -494,6 +620,63 @@ final class NotificationManager {
             return false
         @unknown default:
             return false
+        }
+    }
+
+    static func upcomingDeliveryDates(
+        count: Int,
+        hour: Int,
+        minute: Int,
+        now: Date,
+        calendar: Calendar
+    ) -> [Date] {
+        guard count > 0 else { return [] }
+        let safeHour = min(max(hour, 0), 23)
+        let safeMinute = min(max(minute, 0), 59)
+        var firstDay = calendar.startOfDay(for: now)
+
+        guard let firstDate = calendar.date(
+            bySettingHour: safeHour,
+            minute: safeMinute,
+            second: 0,
+            of: firstDay
+        ) else {
+            return []
+        }
+
+        if firstDate <= now,
+           let nextDay = calendar.date(byAdding: .day, value: 1, to: firstDay) {
+            firstDay = nextDay
+        }
+
+        return (0..<count).compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: offset, to: firstDay) else {
+                return nil
+            }
+            return calendar.date(
+                bySettingHour: safeHour,
+                minute: safeMinute,
+                second: 0,
+                of: day
+            )
+        }
+    }
+
+    static func upcomingDeliveryWeekdays(
+        count: Int,
+        hour: Int,
+        minute: Int,
+        now: Date,
+        calendar: Calendar
+    ) -> [ReminderWeekday] {
+        upcomingDeliveryDates(
+            count: count,
+            hour: hour,
+            minute: minute,
+            now: now,
+            calendar: calendar
+        ).compactMap { date in
+            ReminderWeekday(rawValue: calendar.component(.weekday, from: date))
         }
     }
 

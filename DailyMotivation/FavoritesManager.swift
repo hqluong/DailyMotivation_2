@@ -190,6 +190,13 @@ class FavoritesManager: ObservableObject {
         }
     }
 
+    func resetAll() {
+        favoriteIDs.removeAll()
+        favoriteTimestamps.removeAll()
+        userDefaults.removeObject(forKey: favoritesKey)
+        userDefaults.removeObject(forKey: favoriteTimestampsKey)
+    }
+
     /// Returns an array of full Quote objects that are favorites, given a list of all quotes.
     /// Filters out orphaned favorite IDs only in-memory; does not mutate or persist cleanup here.
     func getFavoriteQuotes(

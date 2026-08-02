@@ -112,15 +112,12 @@ struct QuoteWidgetView: View {
                     .foregroundStyle(.white.opacity(0.9))
                     .lineLimit(1)
 
-                HStack(spacing: 10) {
-                    actionPill(text: "Favorite", systemImage: "heart.fill")
-                    actionPill(text: "Share", systemImage: "square.and.arrow.up")
-                    Spacer()
-                }
+                Label("Open Daily Motivation", systemImage: "arrow.up.forward.app")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.82))
             }
             .padding(16)
         }
-        .widgetURL(URL(string: "dailymotivation://today"))
     }
 
     private var accessoryRectangular: some View {
@@ -153,15 +150,6 @@ struct QuoteWidgetView: View {
     }
 #endif
 
-    private func actionPill(text: String, systemImage: String) -> some View {
-        Label(text, systemImage: systemImage)
-            .font(.caption2.weight(.semibold))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(Color.white.opacity(0.14))
-            .foregroundStyle(.white)
-            .clipShape(Capsule())
-    }
 }
 
 struct DailyMotivationWidget: Widget {

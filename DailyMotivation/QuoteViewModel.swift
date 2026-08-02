@@ -90,8 +90,43 @@ class QuoteViewModel: ObservableObject {
             return
         }
 
-        if let nextQuote = nextUnseenQuote(from: filteredQuotes) {
+        if let unseenQuote = nextUnseenQuote(from: filteredQuotes) {
+            currentQuote = unseenQuote
+            return
+        }
+
+        let alternatives = filteredQuotes.filter { $0.id != currentQuote?.id }
+        currentQuote = alternatives.randomElement() ?? filteredQuotes.randomElement()
+    }
+
+    /// Shows a quote from the user's preferred categories, falling back to the full library.
+    func showNewPreferredQuote(preferredCategories: [String]) {
+        let exclusions = currentQuote.map { Set([$0.id]) } ?? []
+        if let nextQuote = preferredRandomQuote(
+            preferredCategories: preferredCategories,
+            excludingIDs: exclusions
+        ) {
             currentQuote = nextQuote
+        }
+    }
+
+    /// Builds a deterministic sequence for future local notifications without changing UI state.
+    func plannedQuotes(
+        count: Int,
+        preferredCategories: [String],
+        starting date: Date = Date(),
+        seedOffset: Int = 0
+    ) -> [Quote] {
+        guard count > 0, !allQuotes.isEmpty else { return [] }
+
+        let preferredSet = Set(preferredCategories)
+        let preferredPool = allQuotes.filter { preferredSet.contains($0.category) }
+        let pool = preferredPool.isEmpty ? allQuotes : preferredPool
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: date) ?? 1
+        let startIndex = abs(dayOfYear - 1 + seedOffset) % pool.count
+
+        return (0..<count).map { offset in
+            pool[(startIndex + offset) % pool.count]
         }
     }
 

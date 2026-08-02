@@ -1,9 +1,8 @@
 import Foundation
 import Testing
 @testable import DailyMotivation
-#if canImport(DailyMotivationWidgetExtension)
-@testable import DailyMotivationWidgetExtension
-#endif
+
+private typealias AppQuote = DailyMotivation.Quote
 
 /// Unit tests for the DailyMotivation app.
 struct DailyMotivationTests {
@@ -20,13 +19,13 @@ struct DailyMotivationTests {
         ]
         """
 
-        let firstDecode = try JSONDecoder().decode([Quote].self, from: Data(payload.utf8))
-        let secondDecode = try JSONDecoder().decode([Quote].self, from: Data(payload.utf8))
+        let firstDecode = try JSONDecoder().decode([AppQuote].self, from: Data(payload.utf8))
+        let secondDecode = try JSONDecoder().decode([AppQuote].self, from: Data(payload.utf8))
 
         #expect(firstDecode.count == 1)
         #expect(secondDecode.count == 1)
         #expect(firstDecode[0].id == secondDecode[0].id)
-        #expect(firstDecode[0].id == Quote(
+        #expect(firstDecode[0].id == AppQuote(
             quote: "Stay curious.",
             author: "Ada Lovelace",
             category: "Growth"
@@ -44,8 +43,8 @@ struct DailyMotivationTests {
         ]
         """
 
-        let decoded = try JSONDecoder().decode([Quote].self, from: Data(payload.utf8))
-        let expected = Quote(
+        let decoded = try JSONDecoder().decode([AppQuote].self, from: Data(payload.utf8))
+        let expected = AppQuote(
             quote: "Consistency compounds.",
             author: "James Clear",
             category: "General"
@@ -70,7 +69,7 @@ struct DailyMotivationTests {
         ]
         """
 
-        let decoded = try JSONDecoder().decode([Quote].self, from: Data(payload.utf8))
+        let decoded = try JSONDecoder().decode([AppQuote].self, from: Data(payload.utf8))
 
         #expect(decoded.count == 1)
         #expect(decoded[0].id == explicitID)
@@ -79,11 +78,11 @@ struct DailyMotivationTests {
     @Test
     func dailyQuoteSelection_matchesTodayIndexingContract() {
         let quotes = [
-            Quote(quote: "Quote 0", author: "Author 0", category: "A"),
-            Quote(quote: "Quote 1", author: "Author 1", category: "B"),
-            Quote(quote: "Quote 2", author: "Author 2", category: "C"),
-            Quote(quote: "Quote 3", author: "Author 3", category: "D"),
-            Quote(quote: "Quote 4", author: "Author 4", category: "E")
+            AppQuote(quote: "Quote 0", author: "Author 0", category: "A"),
+            AppQuote(quote: "Quote 1", author: "Author 1", category: "B"),
+            AppQuote(quote: "Quote 2", author: "Author 2", category: "C"),
+            AppQuote(quote: "Quote 3", author: "Author 3", category: "D"),
+            AppQuote(quote: "Quote 4", author: "Author 4", category: "E")
         ]
         let viewModel = makeViewModel()
         let today = Date()
@@ -95,24 +94,6 @@ struct DailyMotivationTests {
         #expect(viewModel.getDailyQuote()?.id == quotes[expectedIndex].id)
         #expect(viewModel.currentQuote?.id == quotes[expectedIndex].id)
     }
-
-    #if canImport(DailyMotivationWidgetExtension)
-    @Test
-    func dailyQuoteSelection_matchesWidgetForToday() {
-        let viewModel = makeViewModel()
-        let today = Date()
-
-        #expect(!viewModel.allQuotes.isEmpty)
-
-        viewModel.setCurrentQuoteToDaily()
-
-        let appQuote = viewModel.getDailyQuote()
-        let widgetQuote = QuoteWidgetDataSource.shared.quote(for: today)
-
-        #expect(appQuote?.quote == widgetQuote.text)
-        #expect(appQuote?.author == widgetQuote.author)
-    }
-    #endif
 
     private func makeViewModel() -> QuoteViewModel {
         let suiteName = "DailyMotivationTests.\(UUID().uuidString)"

@@ -16,6 +16,8 @@ struct FavoritesView: View {
     // Observe the FavoritesManager to allow unfavoriting directly from this view
     @ObservedObject var favoritesManager: FavoritesManager
     @ObservedObject var engagementTracker: EngagementTracker
+    @ObservedObject var noteManager: NoteManager
+    @ObservedObject var dailyResetManager: DailyResetManager
 
     @State private var sortOption: FavoriteSortOption = .recent
     @State private var selectedCategory: String = "All"
@@ -33,6 +35,18 @@ struct FavoritesView: View {
         let isSearching = !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 
         List {
+            Section {
+                NavigationLink {
+                    ReflectionLibraryView(
+                        resetManager: dailyResetManager,
+                        noteManager: noteManager,
+                        quotes: viewModel.allQuotes
+                    )
+                } label: {
+                    Label("Reflections and notes", systemImage: "text.book.closed")
+                }
+            }
+
             Section {
                 winsSummaryView()
             } header: {
@@ -112,6 +126,7 @@ struct FavoritesView: View {
         let week = Array(summary.recentHistory.suffix(7))
         let viewedCount = week.filter { $0.viewed }.count
         let favoritedCount = week.filter { $0.favorited }.count
+        let resetCount = week.filter { $0.resetCompleted }.count
 
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -123,16 +138,34 @@ struct FavoritesView: View {
                     .foregroundColor(.secondary)
             }
 
-            HStack(spacing: 12) {
-                statPill(icon: "book.pages.fill", text: "\(viewedCount)/7 read")
-                statPill(icon: "heart.fill", text: "\(favoritedCount)/7 saved")
-                statPill(icon: "square.and.arrow.up.fill", text: "\(summary.shareCompletedCount) shared")
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    statPill(icon: "checkmark.circle.fill", text: "\(resetCount)/7 resets")
+                    statPill(icon: "book.pages.fill", text: "\(viewedCount)/7 read")
+                    statPill(icon: "heart.fill", text: "\(favoritedCount)/7 saved")
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    statPill(icon: "checkmark.circle.fill", text: "\(resetCount)/7 resets")
+                    statPill(icon: "book.pages.fill", text: "\(viewedCount)/7 read")
+                    statPill(icon: "heart.fill", text: "\(favoritedCount)/7 saved")
+                }
             }
 
-            HStack(spacing: 12) {
-                achievementBadge(title: "3-day badge", unlocked: summary.currentStreak >= 3)
-                achievementBadge(title: "7-day badge", unlocked: summary.currentStreak >= 7)
-                achievementBadge(title: "21-day badge", unlocked: summary.currentStreak >= 21)
+            Label("\(summary.shareCompletedCount) total shares", systemImage: "square.and.arrow.up")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    achievementBadge(title: "3-day badge", unlocked: summary.bestStreak >= 3)
+                    achievementBadge(title: "7-day badge", unlocked: summary.bestStreak >= 7)
+                    achievementBadge(title: "21-day badge", unlocked: summary.bestStreak >= 21)
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    achievementBadge(title: "3-day badge", unlocked: summary.bestStreak >= 3)
+                    achievementBadge(title: "7-day badge", unlocked: summary.bestStreak >= 7)
+                    achievementBadge(title: "21-day badge", unlocked: summary.bestStreak >= 21)
+                }
             }
         }
         .padding(.vertical, 4)
@@ -168,6 +201,7 @@ struct FavoritesView: View {
         .padding(.vertical, 8)
         .background(Color(.systemGray5))
         .clipShape(Capsule())
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     private func achievementBadge(title: String, unlocked: Bool) -> some View {
@@ -184,6 +218,7 @@ struct FavoritesView: View {
         .overlay(
             Capsule().stroke(unlocked ? Color.green.opacity(0.6) : Color.gray.opacity(0.25), lineWidth: 1)
         )
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 
@@ -206,6 +241,8 @@ struct FavoritesView: View {
     previewFavManager.addFavorite(quote: previewQuote2)
 
     let previewTracker = EngagementTracker(userDefaults: engagementStore)
+    let previewNotes = NoteManager(userDefaults: engagementStore)
+    let previewResets = DailyResetManager(userDefaults: engagementStore)
     previewTracker.resetAll()
     previewTracker.logQuoteViewed()
     previewTracker.logQuoteFavorited()
@@ -215,6 +252,12 @@ struct FavoritesView: View {
 
     // Embed in NavigationView for the title to show
     return NavigationView {
-        FavoritesView(viewModel: previewViewModel, favoritesManager: previewFavManager, engagementTracker: previewTracker)
+        FavoritesView(
+            viewModel: previewViewModel,
+            favoritesManager: previewFavManager,
+            engagementTracker: previewTracker,
+            noteManager: previewNotes,
+            dailyResetManager: previewResets
+        )
     }
 }

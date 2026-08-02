@@ -33,6 +33,11 @@ final class NoteManager: ObservableObject {
         saveNotes()
     }
 
+    func resetAll() {
+        notes.removeAll()
+        userDefaults.removeObject(forKey: notesKey)
+    }
+
     private func saveNotes() {
         let codable = notes.reduce(into: [String: String]()) { dict, entry in
             dict[entry.key.uuidString] = entry.value
