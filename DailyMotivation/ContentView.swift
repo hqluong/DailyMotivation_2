@@ -1935,7 +1935,7 @@ struct SettingsView: View {
                 Section(header: Text("Privacy and Support")) {
                     Label("Your data stays on this device", systemImage: "lock.shield.fill")
                     Link(
-                        destination: URL(string: "mailto:luohung1512@icloud.com")!
+                        destination: URL(string: "mailto:trample_pies_4l@icloud.com")!
                     ) {
                         Label("Contact support", systemImage: "envelope")
                     }
