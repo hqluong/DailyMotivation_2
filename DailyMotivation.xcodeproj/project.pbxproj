@@ -10,6 +10,11 @@
 		C7115BFB2EE32D3C00081F62 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C7115BFA2EE32D3C00081F62 /* WidgetKit.framework */; };
 		C7115BFD2EE32D3C00081F62 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C7115BFC2EE32D3C00081F62 /* SwiftUI.framework */; };
 		C7115C0C2EE32D3E00081F62 /* DailyMotivationWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C7115BF82EE32D3C00081F62 /* DailyMotivationWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D1A000000000000000000021 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000011 /* FirebaseAnalytics */; };
+		D1A000000000000000000022 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000012 /* FirebaseCrashlytics */; };
+		D1A000000000000000000023 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000013 /* FirebaseRemoteConfig */; };
+		D1A000000000000000000024 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000014 /* GoogleMobileAds */; };
+		D1A000000000000000000025 /* GoogleUserMessagingPlatform in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000015 /* GoogleUserMessagingPlatform */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -119,6 +124,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1A000000000000000000021 /* FirebaseAnalytics in Frameworks */,
+				D1A000000000000000000022 /* FirebaseCrashlytics in Frameworks */,
+				D1A000000000000000000023 /* FirebaseRemoteConfig in Frameworks */,
+				D1A000000000000000000024 /* GoogleMobileAds in Frameworks */,
+				D1A000000000000000000025 /* GoogleUserMessagingPlatform in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -204,6 +214,7 @@
 				C76C9BAF2D7D83CC004FEF31 /* Frameworks */,
 				C76C9BB02D7D83CC004FEF31 /* Resources */,
 				C7115C0D2EE32D3E00081F62 /* Embed Foundation Extensions */,
+				D1A000000000000000000031 /* Upload Crashlytics Symbols */,
 			);
 			buildRules = (
 			);
@@ -215,6 +226,11 @@
 			);
 			name = DailyMotivation;
 			packageProductDependencies = (
+				D1A000000000000000000011 /* FirebaseAnalytics */,
+				D1A000000000000000000012 /* FirebaseCrashlytics */,
+				D1A000000000000000000013 /* FirebaseRemoteConfig */,
+				D1A000000000000000000014 /* GoogleMobileAds */,
+				D1A000000000000000000015 /* GoogleUserMessagingPlatform */,
 			);
 			productName = DailyMotivation;
 			productReference = C76C9BB22D7D83CC004FEF31 /* DailyMotivation.app */;
@@ -301,6 +317,11 @@
 			);
 			mainGroup = C76C9BA92D7D83CC004FEF31;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D1A000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				D1A000000000000000000002 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				D1A000000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C76C9BB32D7D83CC004FEF31 /* Products */;
 			projectDirPath = "";
@@ -344,6 +365,33 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		D1A000000000000000000031 /* Upload Crashlytics Symbols */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Check Ad IDs + Upload Crashlytics Symbols";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Uploads dSYMs for Crashlytics; skipped until GoogleService-Info.plist is added.\nif [ \"${CONFIGURATION}\" != \"Release\" ]; then exit 0; fi\ncase \"${GAD_APPLICATION_ID}${DM_BANNER_AD_UNIT_ID}${DM_INTERSTITIAL_AD_UNIT_ID}\" in\n  *REPLACE_WITH*|*3940256099942544*) echo \"error: Set the real AdMob app and ad unit IDs (GAD_APPLICATION_ID, DM_BANNER_AD_UNIT_ID, DM_INTERSTITIAL_AD_UNIT_ID) for Release.\"; exit 1 ;;\nesac\nif [ ! -f \"${SRCROOT}/DailyMotivation/GoogleService-Info.plist\" ]; then\n  echo \"warning: GoogleService-Info.plist missing; skipping Crashlytics symbol upload\"\n  exit 0\nfi\n\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		C7115BF42EE32D3C00081F62 /* Sources */ = {
@@ -402,7 +450,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 7X6A72UQS3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DailyMotivationWidget/Info.plist;
@@ -434,7 +482,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 7X6A72UQS3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DailyMotivationWidget/Info.plist;
@@ -587,12 +635,17 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"DailyMotivation/Preview Content\"";
 				DEVELOPMENT_TEAM = 7X6A72UQS3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Daily Motivation: Quotes";
+				DM_BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/2435281174";
+				DM_INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/4411468910";
+				GAD_APPLICATION_ID = "ca-app-pub-3940256099942544~1458002511";
+				INFOPLIST_FILE = "DailyMotivation-Info.plist";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This lets us show ads that are more relevant to you. Daily Motivation works the same either way.";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -621,12 +674,17 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"DailyMotivation/Preview Content\"";
 				DEVELOPMENT_TEAM = 7X6A72UQS3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Daily Motivation: Quotes";
+				DM_BANNER_AD_UNIT_ID = "ca-app-pub-8855786898543374/6552099859";
+				DM_INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-8855786898543374/7066446032";
+				GAD_APPLICATION_ID = "ca-app-pub-8855786898543374~7822703514";
+				INFOPLIST_FILE = "DailyMotivation-Info.plist";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This lets us show ads that are more relevant to you. Daily Motivation works the same either way.";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -765,6 +823,61 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D1A000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.19.2;
+			};
+		};
+		D1A000000000000000000002 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.11.0;
+			};
+		};
+		D1A000000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-user-messaging-platform";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D1A000000000000000000011 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		D1A000000000000000000012 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		D1A000000000000000000013 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
+		};
+		D1A000000000000000000014 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000002 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+		D1A000000000000000000015 /* GoogleUserMessagingPlatform */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */;
+			productName = GoogleUserMessagingPlatform;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C76C9BAA2D7D83CC004FEF31 /* Project object */;
 }

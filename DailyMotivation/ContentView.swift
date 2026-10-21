@@ -247,6 +247,7 @@ struct ContentView: View {
         dailyResetManager.resetAll()
         personalizationManager.resetAll()
         engagementTracker.resetAll()
+        AnalyticsLogger.resetData()
 
         customReminders = []
         customRemindersData = Data()
@@ -495,6 +496,7 @@ struct ContentView: View {
             dailyReminderEnabled = result.reminderEnabled
             hasCompletedOnboarding = true
             showingOnboarding = false
+            AnalyticsLogger.log(.onboardingCompleted, ["categories": result.preferredCategories.joined(separator: ",")])
             viewModel.showNewPreferredQuote(
                 preferredCategories: result.preferredCategories
             )
@@ -502,6 +504,11 @@ struct ContentView: View {
             viewModel.recordDailyQuoteView()
             if result.reminderEnabled {
                 updateNotificationSchedule(requestAuthorizationIfNeeded: true)
+            }
+            // Consent/tracking prompts come after onboarding. If the notification alert is
+            // showing, returning to .active below starts them instead; this is the fallback.
+            DispatchQueue.main.asyncAfter(deadline: .now() + (result.reminderEnabled ? 3 : 0.8)) {
+                AdsManager.shared.startIfNeeded()
             }
         }
     }
@@ -626,6 +633,7 @@ struct ContentView: View {
                         initialNote: noteDraft,
                         onSave: { text in
                             noteManager.setNote(text, for: currentQuote)
+                            AnalyticsLogger.log(.noteSaved)
                             syncNoteDraftWithCurrentQuote()
                             showingNoteEditor = false
                         },
@@ -691,6 +699,7 @@ struct ContentView: View {
 
                 if hasCompletedOnboarding {
                     viewModel.recordDailyQuoteView()
+                    AdsManager.shared.startIfNeeded()
                 }
                 updateNotificationSchedule()
             }
@@ -698,6 +707,9 @@ struct ContentView: View {
                 guard phase == .active else { return }
                 refreshDailyContentIfNeeded()
                 updateNotificationSchedule()
+                if hasCompletedOnboarding && !showingOnboarding {
+                    AdsManager.shared.startIfNeeded()
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
                 refreshDailyContentIfNeeded()
@@ -767,12 +779,15 @@ private struct QuoteLayoutView: View {
     let fontHeightScaleFactor: CGFloat
 
     @Environment(\.dismissSearch) private var dismissSearch
+    @ObservedObject private var ads = AdsManager.shared
     // Scales the geometry-derived quote size with the user's Dynamic Type setting.
     @ScaledMetric(relativeTo: .title) private var quoteTextScale: CGFloat = 1
     // Set when a search result is picked so clearing the search keeps that quote.
     @State private var keepCurrentQuoteOnNextSync = false
 
     private func showNextQuote(categoryFilter: String?) {
+        AnalyticsLogger.log(.quoteNext)
+        AdsManager.shared.registerNextTap()
         if let currentQuote = viewModel.currentQuote {
             personalizationManager.recordSkipped(currentQuote)
         }
@@ -791,7 +806,9 @@ private struct QuoteLayoutView: View {
         let baseTopPadding: CGFloat = isCompactHeight ? 28 : 12
         let effectiveTopPadding = baseTopPadding + safeTopInset
         let bottomPadding: CGFloat = safeAreaInsets.bottom + (isCompactHeight ? 18 : 20)
-        let quoteHeightFactor: CGFloat = isCompactHeight ? 0.48 : 0.62
+        // The Home banner takes ~80pt in portrait, so size the quote for the shorter card it leaves.
+        let reservesBanner = !isCompactHeight && ads.canShowAds && RemoteSettings.bannerEnabled
+        let quoteHeightFactor: CGFloat = isCompactHeight ? 0.48 : (reservesBanner ? 0.53 : 0.62)
         let quoteAreaMaxHeight = size.height * quoteHeightFactor
         let cardMinHeightMultiplier: CGFloat = isCompactHeight ? 0.66 : 0.9
         let adjustedFontScale = fontHeightScaleFactor * (isCompactHeight ? 0.85 : 1.0)
@@ -952,6 +969,9 @@ private struct QuoteLayoutView: View {
                     )
 
                     focusTip(for: quoteForButtons, horizontalPadding: horizontalPadding)
+
+                    AdBannerView()
+                        .padding(.horizontal, horizontalPadding)
                 }
             }
             .padding(.top, topPadding)
@@ -1070,6 +1090,7 @@ private struct QuoteLayoutView: View {
     }
 
     private func selectSearchResult(_ quote: Quote) {
+        AnalyticsLogger.log(.searchResultOpened)
         keepCurrentQuoteOnNextSync = true
         viewModel.currentQuote = quote
         searchText = ""
@@ -1813,6 +1834,8 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingResetConfirmation = false
     @State private var showingSupportEmailCopied = false
+    @State private var analyticsEnabled = AnalyticsLogger.isCollectionEnabled
+    @ObservedObject private var ads = AdsManager.shared
     private static let supportEmail = "trample_pies_4l@icloud.com"
 
     // Helper to create a Date from hour/minute
@@ -1996,8 +2019,29 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Label("Your data stays on this device", systemImage: "lock.shield.fill")
-                        .accessibilityHint("Favorites, notes, resets, and reminders are never uploaded")
+                    Label("Favorites, notes and resets stay on this device", systemImage: "lock.shield.fill")
+                        .accessibilityHint("They are never uploaded")
+                    Toggle(isOn: Binding(
+                        get: { analyticsEnabled },
+                        set: { enabled in
+                            analyticsEnabled = enabled
+                            AnalyticsLogger.setCollectionEnabled(enabled)
+                        }
+                    )) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Share usage and crash data")
+                            Text("Anonymous app usage and crash reports help improve Daily Motivation.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    if ads.privacyOptionsRequired {
+                        Button {
+                            ads.presentPrivacyOptions()
+                        } label: {
+                            Label("Ad privacy choices", systemImage: "hand.raised")
+                        }
+                    }
                     Button {
                         contactSupport()
                     } label: {

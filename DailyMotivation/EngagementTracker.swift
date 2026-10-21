@@ -132,6 +132,7 @@ final class EngagementTracker: ObservableObject {
         let normalized = startOfDay(for: date)
         if viewedDays.insert(normalized).inserted {
             saveDates(viewedDays, key: viewedDatesKey)
+            AnalyticsLogger.log(.quoteViewed)
         }
         recalculateSummary(reference: date)
     }
@@ -142,6 +143,7 @@ final class EngagementTracker: ObservableObject {
         if favoritedDays.insert(normalized).inserted {
             saveDates(favoritedDays, key: favoriteDatesKey)
         }
+        AnalyticsLogger.log(.quoteFavorited)
         recalculateSummary(reference: date)
     }
 
@@ -150,12 +152,14 @@ final class EngagementTracker: ObservableObject {
         let normalized = startOfDay(for: date)
         if resetCompletedDays.insert(normalized).inserted {
             saveDates(resetCompletedDays, key: resetCompletedDatesKey)
+            AnalyticsLogger.log(.dailyResetCompleted)
         }
         recalculateSummary(reference: date)
     }
 
     /// Records a tap on the quote share button.
     func logShareClicked() {
+        AnalyticsLogger.log(.shareTapped)
         shareClickedCount = min(shareClickedCount + 1, Self.maxShareEventCount)
         userDefaults.set(shareClickedCount, forKey: shareClickedCountKey)
         recalculateSummary()
@@ -163,6 +167,7 @@ final class EngagementTracker: ObservableObject {
 
     /// Records a successful share completion from the system share sheet.
     func logShareCompleted() {
+        AnalyticsLogger.log(.shareCompleted)
         shareCompletedCount = min(shareCompletedCount + 1, Self.maxShareEventCount)
         userDefaults.set(shareCompletedCount, forKey: shareCompletedCountKey)
         recalculateSummary()
