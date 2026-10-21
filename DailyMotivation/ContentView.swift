@@ -440,7 +440,10 @@ struct ContentView: View {
     private var mainToolbar: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
              Button {
-                 showingFavorites = true
+                 // A push requested while the search bar is dismissing can be dropped, leaving the
+                 // flag stuck at true; resetting first makes every tap open the Library.
+                 showingFavorites = false
+                 DispatchQueue.main.async { showingFavorites = true }
              } label: {
                  Image(systemName: "books.vertical")
                      .accessibilityLabel("Library: favorites and reflections")
@@ -495,6 +498,8 @@ struct ContentView: View {
             viewModel.showNewPreferredQuote(
                 preferredCategories: result.preferredCategories
             )
+            // onAppear skipped this while onboarding was pending, so count today's first view now.
+            viewModel.recordDailyQuoteView()
             if result.reminderEnabled {
                 updateNotificationSchedule(requestAuthorizationIfNeeded: true)
             }
