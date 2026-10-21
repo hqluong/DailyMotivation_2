@@ -154,7 +154,13 @@ struct OnboardingView: View {
                             )
                             .disabled(!reminderEnabled)
                             .foregroundColor(.white)
-                            .colorMultiply(.white)
+
+                            if reminderEnabled {
+                                Text("iOS will ask to allow notifications so we can send one quote a day.")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                     }
 
@@ -168,37 +174,49 @@ struct OnboardingView: View {
                             tipRow(icon: "flame.fill", text: "Complete a Daily Reset to build a meaningful streak.")
                         }
                     }
-
-                    Button(action: finish) {
-                        Text("Start my day")
-                            .font(.headline)
-                            .foregroundColor(.black.opacity(0.9))
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(.thinMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .stroke(
-                                        LinearGradient(
-                                            colors: [
-                                                Color.white.opacity(0.45),
-                                                Color.white.opacity(0.2),
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        lineWidth: 1.2
-                                    )
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .shadow(color: Color.black.opacity(0.2), radius: 16, x: 0, y: 10)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
                 }
                 .padding(.top, 20)
+                .padding(.bottom, 12)
+            }
+            // Keeps the primary action visible without scrolling.
+            .safeAreaInset(edge: .bottom) {
+                startButton
             }
         }
+        // The onboarding background is always dark, so keep materials and controls dark for contrast.
+        .environment(\.colorScheme, .dark)
+    }
+
+    private var startButton: some View {
+        Button(action: finish) {
+            Text("Start my day")
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .background(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 1.0, green: 0.35, blue: 0.55),
+                            Color(red: 0.36, green: 0.42, blue: 0.98),
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .shadow(color: Color.black.opacity(0.25), radius: 16, x: 0, y: 10)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
+        .padding(.bottom, 8)
+        .background(
+            LinearGradient(
+                colors: [Color.clear, Color(red: 0.06, green: 0.09, blue: 0.18).opacity(0.9)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        )
     }
 
     private func finish() {

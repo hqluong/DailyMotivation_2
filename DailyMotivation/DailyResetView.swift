@@ -7,10 +7,13 @@ struct DailyResetView: View {
     let preferredCategories: [String]
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @State private var activeEntryID: UUID?
     @State private var selectedNeed: DailyNeed?
     @State private var reflection = ""
     @State private var selectedAction = ""
+    @State private var showCompletionCelebration = false
+    @FocusState private var isReflectionFocused: Bool
 
     private var activeEntry: DailyResetEntry? {
         guard let activeEntryID else { return manager.entry() }
@@ -22,6 +25,10 @@ struct DailyResetView: View {
         return viewModel.allQuotes.first { $0.id == quoteID }
     }
 
+    private var canComplete: Bool {
+        !reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !selectedAction.isEmpty
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -31,22 +38,39 @@ struct DailyResetView: View {
                     needPicker
                 }
             }
+            .themedScreen()
             .navigationTitle("Daily Reset")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("Done") {
+                        saveReflection()
+                        dismiss()
+                    }
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { isReflectionFocused = false }
                 }
             }
             .onAppear(perform: loadExistingEntry)
+            .onDisappear(perform: saveReflection)
+            .onChange(of: scenePhase) { phase in
+                if phase != .active { saveReflection() }
+            }
         }
     }
 
     private var needPicker: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Text("What do you need right now?")
-                    .font(.title2.bold())
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("What do you need right now?")
+                        .font(.title2.bold())
+                    Text("Pick one, write a sentence, and choose a small action. It takes about a minute and keeps your streak going.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
 
                 LazyVGrid(
                     columns: [GridItem(.flexible()), GridItem(.flexible())],
@@ -54,18 +78,20 @@ struct DailyResetView: View {
                 ) {
                     ForEach(DailyNeed.allCases) { need in
                         Button {
-                            beginReset(for: need)
+                            beginReset(for: need, carryingReflection: reflection)
                         } label: {
                             VStack(spacing: 10) {
                                 Image(systemName: need.iconName)
                                     .font(.title2)
+                                    .foregroundStyle(.tint)
                                 Text(need.displayName)
                                     .font(.headline)
+                                    .foregroundStyle(.primary)
                             }
                             .frame(maxWidth: .infinity, minHeight: 92)
-                            .foregroundStyle(.primary)
-                            .background(Color(.secondarySystemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .shadow(color: Color.black.opacity(0.06), radius: 6, x: 0, y: 3)
                         }
                         .buttonStyle(.plain)
                         .accessibilityHint("Starts today's reflection with a relevant quote")
@@ -80,12 +106,22 @@ struct DailyResetView: View {
         Form {
             if entry.isCompleted {
                 Section {
-                    Label("Today's reset is complete", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label("Today's reset is complete", systemImage: "checkmark.circle.fill")
+                            .font(.headline)
+                            .foregroundStyle(.green)
+                        let streak = engagementTracker.summary.currentStreak
+                        Text(streak == 1 ? "🔥 1-day streak. Come back tomorrow to keep it going." : "🔥 \(streak)-day streak. Nice work.")
+                            .font(.subheadline)
+                    }
+                    .padding(.vertical, 4)
+                    .scaleEffect(showCompletionCelebration ? 1.03 : 1)
+                    .animation(.spring(response: 0.35, dampingFraction: 0.6), value: showCompletionCelebration)
+                    .accessibilityElement(children: .combine)
                 }
             }
 
-            Section("Today's quote") {
+            Section("Your quote for this reset") {
                 if let quote = activeQuote {
                     Text("\"\(quote.quote)\"")
                         .font(.headline)
@@ -94,17 +130,36 @@ struct DailyResetView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Label(need.displayName, systemImage: need.iconName)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                HStack {
+                    Label(need.displayName, systemImage: need.iconName)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    if !entry.isCompleted {
+                        Button("Change need") {
+                            changeNeed(entry: entry)
+                        }
+                        .font(.caption.weight(.semibold))
+                        .buttonStyle(.borderless)
+                    }
+                }
             }
 
             Section {
                 TextEditor(text: $reflection)
                     .frame(minHeight: 130)
-                    .onChange(of: reflection) { newValue in
-                        manager.update(entryID: entry.id, reflection: newValue)
+                    .focused($isReflectionFocused)
+                    .overlay(alignment: .topLeading) {
+                        if reflection.isEmpty {
+                            Text("Write a sentence or two…")
+                                .foregroundStyle(.tertiary)
+                                .padding(.top, 8)
+                                .padding(.leading, 5)
+                                .allowsHitTesting(false)
+                        }
                     }
+                    // Saved on Done, completion, need change, or backgrounding; saving per keystroke
+                    // republishes the manager and drops the editor's focus mid-typing.
             } header: {
                 Text(need.reflectionPrompt)
             }
@@ -130,18 +185,25 @@ struct DailyResetView: View {
                         entry.isCompleted ? "Reset completed" : "Complete today's reset",
                         systemImage: entry.isCompleted ? "checkmark.circle.fill" : "checkmark.circle"
                     )
-                    .frame(maxWidth: .infinity)
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .disabled(
-                    entry.isCompleted ||
-                    reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                    selectedAction.isEmpty
-                )
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+                .disabled(entry.isCompleted || !canComplete)
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            } footer: {
+                if !entry.isCompleted && !canComplete {
+                    Text("Write a short reflection above to complete today's reset.")
+                }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
-    private func beginReset(for need: DailyNeed) {
+    private func beginReset(for need: DailyNeed, carryingReflection carried: String = "") {
         var categories = need.quoteCategories
         for category in preferredCategories where !categories.contains(category) {
             categories.append(category)
@@ -157,11 +219,25 @@ struct DailyResetView: View {
 
         let action = need.suggestedActions[0]
         let entry = manager.start(need: need, quoteID: quote.id, action: action)
-        viewModel.currentQuote = quote
+        if !carried.isEmpty {
+            manager.update(entryID: entry.id, reflection: carried)
+        }
         activeEntryID = entry.id
         selectedNeed = need
-        reflection = entry.reflection
+        reflection = carried.isEmpty ? entry.reflection : carried
         selectedAction = entry.action
+    }
+
+    /// Lets the user pick a different need before completing, keeping anything already written.
+    private func changeNeed(entry: DailyResetEntry) {
+        guard !entry.isCompleted else { return }
+        let carried = reflection
+        isReflectionFocused = false
+        manager.remove(entryID: entry.id)
+        activeEntryID = nil
+        selectedNeed = nil
+        selectedAction = ""
+        reflection = carried
     }
 
     private func loadExistingEntry() {
@@ -170,12 +246,15 @@ struct DailyResetView: View {
         selectedNeed = entry.need
         reflection = entry.reflection
         selectedAction = entry.action
-        if let quote = viewModel.allQuotes.first(where: { $0.id == entry.quoteID }) {
-            viewModel.currentQuote = quote
-        }
+    }
+
+    private func saveReflection() {
+        guard let entry = activeEntry, !entry.isCompleted else { return }
+        manager.update(entryID: entry.id, reflection: reflection)
     }
 
     private func complete(entry: DailyResetEntry) {
+        isReflectionFocused = false
         manager.update(
             entryID: entry.id,
             reflection: reflection,
@@ -183,6 +262,8 @@ struct DailyResetView: View {
         )
         if manager.complete(entryID: entry.id) {
             engagementTracker.logDailyResetCompleted(on: entry.date)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            showCompletionCelebration = true
         }
     }
 }
@@ -276,6 +357,7 @@ struct ReflectionLibraryView: View {
                 }
             }
         }
+        .themedScreen()
         .navigationTitle("Reflections")
     }
 }

@@ -18,7 +18,11 @@ struct FavoritesView: View {
     @ObservedObject var engagementTracker: EngagementTracker
     @ObservedObject var noteManager: NoteManager
     @ObservedObject var dailyResetManager: DailyResetManager
+    /// Shows the tapped favorite on the home screen.
+    var onOpenQuote: ((Quote) -> Void)? = nil
 
+    @Environment(\.dismiss) private var dismiss
+    @State private var recentlyRemoved: Quote?
     @State private var sortOption: FavoriteSortOption = .recent
     @State private var selectedCategory: String = "All"
     @State private var searchText: String = ""
@@ -61,42 +65,85 @@ struct FavoritesView: View {
                 emptyStateView(isSearching: isSearching)
             } else {
                 ForEach(favoriteQuotes) { quote in
+                    Button {
+                        onOpenQuote?(quote)
+                        dismiss()
+                    } label: {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("\"\(quote.quote)\"")
                             .font(.body)
                             .padding(.bottom, 2)
-                            .accessibilityLabel("Quote: \(quote.quote)")
                         Text("- \(quote.author)")
                             .font(.caption)
-                            .foregroundColor(.gray)
-                            .accessibilityLabel("Author: \(quote.author)")
+                            .foregroundColor(.secondary)
                         HStack(spacing: 10) {
                             Label(quote.category, systemImage: "bookmark.fill")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Button(role: .destructive) {
-                                favoritesManager.removeFavorite(quote: quote)
-                            } label: {
-                                Label("Unfavorite", systemImage: "heart.slash")
-                            }
-                            .buttonStyle(.borderless)
                         }
                     }
+                    .foregroundColor(.primary)
+                    }
+                    .accessibilityHint("Shows this quote on the home screen")
                     .swipeActions {
                         Button(role: .destructive) {
-                            favoritesManager.removeFavorite(quote: quote)
+                            remove(quote)
                         } label: {
-                            Label("Delete", systemImage: "trash.fill")
-                                .accessibilityLabel("Remove from favorites")
+                            Label("Remove", systemImage: "heart.slash")
+                        }
+                    }
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            remove(quote)
+                        } label: {
+                            Label("Remove from favorites", systemImage: "heart.slash")
                         }
                     }
                 }
             }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle("Favorite Quotes")
+        .themedScreen()
+        .navigationTitle("Library")
+        .overlay(alignment: .bottom) {
+            if let removed = recentlyRemoved {
+                undoBar(for: removed)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
         .searchable(text: $searchText, prompt: "Search quotes or authors")
+    }
+
+    private func remove(_ quote: Quote) {
+        favoritesManager.removeFavorite(quote: quote)
+        withAnimation { recentlyRemoved = quote }
+        UIAccessibility.post(notification: .announcement, argument: "Removed from favorites. Undo is available.")
+        let undoWindow: TimeInterval = UIAccessibility.isVoiceOverRunning ? 20 : 8
+        DispatchQueue.main.asyncAfter(deadline: .now() + undoWindow) {
+            if recentlyRemoved?.id == quote.id {
+                withAnimation { recentlyRemoved = nil }
+            }
+        }
+    }
+
+    private func undoBar(for quote: Quote) -> some View {
+        HStack {
+            Text("Removed from favorites")
+                .font(.subheadline)
+            Spacer()
+            Button("Undo") {
+                favoritesManager.addFavorite(quote: quote)
+                withAnimation { recentlyRemoved = nil }
+            }
+            .font(.subheadline.weight(.semibold))
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: 48)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
+        .accessibilityElement(children: .contain)
     }
 
     @ViewBuilder
@@ -157,14 +204,14 @@ struct FavoritesView: View {
 
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {
-                    achievementBadge(title: "3-day badge", unlocked: summary.bestStreak >= 3)
-                    achievementBadge(title: "7-day badge", unlocked: summary.bestStreak >= 7)
-                    achievementBadge(title: "21-day badge", unlocked: summary.bestStreak >= 21)
+                    achievementBadge(title: "3 days", unlocked: summary.bestStreak >= 3)
+                    achievementBadge(title: "7 days", unlocked: summary.bestStreak >= 7)
+                    achievementBadge(title: "21 days", unlocked: summary.bestStreak >= 21)
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    achievementBadge(title: "3-day badge", unlocked: summary.bestStreak >= 3)
-                    achievementBadge(title: "7-day badge", unlocked: summary.bestStreak >= 7)
-                    achievementBadge(title: "21-day badge", unlocked: summary.bestStreak >= 21)
+                    achievementBadge(title: "3 days", unlocked: summary.bestStreak >= 3)
+                    achievementBadge(title: "7 days", unlocked: summary.bestStreak >= 7)
+                    achievementBadge(title: "21 days", unlocked: summary.bestStreak >= 21)
                 }
             }
         }
@@ -183,7 +230,7 @@ struct FavoritesView: View {
             } else {
                 Text("No favorites yet")
                     .font(.headline)
-                Text("Tap the heart on any quote to save it, or use \"Surprise me\" to discover a new favorite.")
+                Text("Tap Favorite on any quote to save it, or tap Next on the home screen to discover more.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -199,7 +246,7 @@ struct FavoritesView: View {
         .font(.caption.bold())
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(Color(.systemGray5))
+        .background(.tint.opacity(0.14))
         .clipShape(Capsule())
         .fixedSize(horizontal: true, vertical: false)
     }
@@ -211,6 +258,8 @@ struct FavoritesView: View {
             Text(title)
         }
         .font(.caption)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title) streak badge, \(unlocked ? "unlocked" : "locked")")
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(Color(.systemGray6))

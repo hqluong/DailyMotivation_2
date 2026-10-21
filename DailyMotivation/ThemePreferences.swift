@@ -265,3 +265,46 @@ enum QuoteBackgroundStyle: String, CaseIterable, Identifiable {
         }
     }
 }
+
+// MARK: - Themed Screens
+
+/// Soft wash of the selected color pack behind grouped lists, so sheets feel like part of the
+/// same app as the gradient home screen while keeping system row colors for legibility.
+struct ThemedBackdrop: View {
+    let colorPack: ThemeColorPack
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Color(.systemGroupedBackground)
+            LinearGradient(
+                colors: [
+                    colorPack.secondaryAccent.opacity(0.28),
+                    colorPack.accentColor.opacity(0.10),
+                    Color.clear
+                ],
+                startPoint: .top,
+                endPoint: .center
+            )
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/// Applies the selected color pack's backdrop and tint to a list or form screen.
+private struct ThemedScreenModifier: ViewModifier {
+    @AppStorage("selectedThemeColorPack") private var colorPackRawValue: String = ThemeColorPack.classic.rawValue
+
+    func body(content: Content) -> some View {
+        let colorPack = ThemeColorPack(rawValue: colorPackRawValue) ?? .classic
+        content
+            .scrollContentBackground(.hidden)
+            .background(ThemedBackdrop(colorPack: colorPack))
+            .tint(colorPack.accentColor)
+    }
+}
+
+extension View {
+    func themedScreen() -> some View {
+        modifier(ThemedScreenModifier())
+    }
+}

@@ -22,8 +22,6 @@ struct ContentView: View {
     @State private var shareItems: [Any] = []
     @State private var showingSettings = false
     @State private var showStreakPopup = false
-    @State private var hasPresentedStreakPopup = false
-    @State private var showingEnhancements = false
     @State private var showingOnboarding = false
     @State private var showingNoteEditor = false
     @State private var showingDailyReset = false
@@ -33,6 +31,7 @@ struct ContentView: View {
     @State private var customReminders: [CustomReminder] = []
     @State private var hasLoadedCustomReminders = false
     @State private var lastRefreshedDay: Date?
+    @State private var notificationsDenied = false
     @AppStorage("dailyReminderHour") private var dailyReminderHour: Int = 9
     @AppStorage("dailyReminderMinute") private var dailyReminderMinute: Int = 0
     @AppStorage("dailyReminderEnabled") private var dailyReminderEnabled: Bool = true
@@ -66,7 +65,6 @@ struct ContentView: View {
     private let maxQuoteFontSize: CGFloat = 44
     // Adjust this factor based on testing across screen sizes
     private let fontHeightScaleFactor: CGFloat = 0.09
-    private let streakPopupDisplayDuration: TimeInterval = 4.0
     private let shareSuccessToastDuration: TimeInterval = 2.4
     private let notificationHorizonDays = NotificationManager.Identifier.quoteSequenceLength
 
@@ -202,11 +200,13 @@ struct ContentView: View {
 
     private func updateNotificationSchedule(requestAuthorizationIfNeeded: Bool = false) {
         NotificationManager.shared.getAuthorizationStatus { status in
+            notificationsDenied = status == .denied
             switch status {
             case .authorized, .provisional, .ephemeral:
                 scheduleNotificationsIfPossible()
             case .notDetermined where requestAuthorizationIfNeeded:
                 NotificationManager.shared.requestAuthorization { granted in
+                    notificationsDenied = !granted
                     if granted {
                         scheduleNotificationsIfPossible()
                     }
@@ -216,6 +216,13 @@ struct ContentView: View {
             @unknown default:
                 break
             }
+        }
+    }
+
+    /// Re-reads permission so the "notifications are off" notice reflects changes made in iOS Settings.
+    private func refreshNotificationPermission() {
+        NotificationManager.shared.getAuthorizationStatus { status in
+            notificationsDenied = status == .denied
         }
     }
 
@@ -243,6 +250,7 @@ struct ContentView: View {
 
         customReminders = []
         customRemindersData = Data()
+        searchText = ""
         dailyReminderEnabled = false
         smartMorningEnabled = false
         smartEveningEnabled = false
@@ -335,19 +343,6 @@ struct ContentView: View {
         isSharePresented = true
     }
 
-    private func presentStreakPopupTemporarily() {
-        guard !hasPresentedStreakPopup else { return }
-        hasPresentedStreakPopup = true
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.85, blendDuration: 0.4)) {
-            showStreakPopup = true
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + streakPopupDisplayDuration) {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                showStreakPopup = false
-            }
-        }
-    }
-
     private func presentShareSuccessToast() {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
             showShareSuccessToast = true
@@ -365,196 +360,6 @@ struct ContentView: View {
         } else {
             noteDraft = ""
         }
-    }
-
-    @ViewBuilder
-    private func enhancementsSheet(
-        categories: [String],
-        categoryCounts: [String: Int],
-        colorPack: ThemeColorPack
-    ) -> some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    categoryCarouselSection(
-                        categories: categories,
-                        counts: categoryCounts,
-                        colorPack: colorPack
-                    )
-
-                    reminderStrip(colorPack: colorPack)
-
-                    if let current = viewModel.currentQuote {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Today's focus")
-                                .font(.headline)
-                            Text(focusLine(for: current))
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            Text("“\(current.quote)”")
-                                .font(.body)
-                                .foregroundColor(.primary)
-                            Text("- \(current.author)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(Color(.secondarySystemBackground))
-                        )
-                    }
-
-                    Button {
-                        if let currentQuote = viewModel.currentQuote {
-                            personalizationManager.recordSkipped(currentQuote)
-                        }
-                        if selectedCategory == "All" {
-                            viewModel.showNewPreferredQuote(
-                                preferredCategories: preferredNotificationCategories()
-                            )
-                        } else {
-                            viewModel.showNewRandomQuote(category: selectedCategory)
-                        }
-                    } label: {
-                        Label("Surprise me", systemImage: "sparkles")
-                            .font(.headline)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(colorPack.accentColor)
-                }
-                .padding()
-            }
-            .navigationTitle("Enhancements")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { showingEnhancements = false }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func categoryCarouselSection(
-        categories: [String],
-        counts: [String: Int],
-        colorPack: ThemeColorPack
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Browse categories")
-                .font(.subheadline.weight(.semibold))
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(categories, id: \.self) { category in
-                        let isSelected = selectedCategory == category
-                        let count = counts[category] ?? 0
-                        Button {
-                            selectedCategory = category
-                        } label: {
-                            HStack(spacing: 6) {
-                                Text(category)
-                                if count > 0 {
-                                    Text("\(count)")
-                                        .font(.caption2.weight(.semibold))
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 4)
-                                        .background(Color.white.opacity(0.16))
-                                        .clipShape(Capsule())
-                                }
-                            }
-                            .font(.caption.bold())
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(isSelected ? colorPack.secondaryAccent.opacity(0.25) : Color(.secondarySystemBackground))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                            )
-                        }
-                    }
-                }
-                .padding(.vertical, 4)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func reminderStrip(colorPack: ThemeColorPack) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Reminders")
-                .font(.subheadline.weight(.semibold))
-            HStack(spacing: 10) {
-                reminderPill(
-                    icon: dailyReminderEnabled ? "bell.fill" : "bell.slash",
-                    text: dailyReminderEnabled
-                    ? "Daily \(formatTime(hour: dailyReminderHour, minute: dailyReminderMinute))"
-                    : "Daily off",
-                    active: dailyReminderEnabled,
-                    colorPack: colorPack
-                )
-                reminderPill(
-                    icon: "sunrise.fill",
-                    text: smartMorningEnabled
-                    ? "Morning \(formatTime(hour: smartMorningHour, minute: smartMorningMinute))"
-                    : "Morning off",
-                    active: smartMorningEnabled,
-                    colorPack: colorPack
-                )
-                reminderPill(
-                    icon: "moon.stars.fill",
-                    text: smartEveningEnabled
-                    ? "Evening \(formatTime(hour: smartEveningHour, minute: smartEveningMinute))"
-                    : "Evening off",
-                    active: smartEveningEnabled,
-                    colorPack: colorPack
-                )
-                reminderPill(
-                    icon: "calendar.badge.clock",
-                    text: customReminders.contains(where: { $0.isEnabled })
-                    ? "Custom \(customReminders.filter { $0.isEnabled }.count)"
-                    : "Custom off",
-                    active: customReminders.contains(where: { $0.isEnabled }),
-                    colorPack: colorPack
-                )
-                Spacer()
-            }
-        }
-    }
-
-    private func reminderPill(icon: String, text: String, active: Bool, colorPack: ThemeColorPack) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-            Text(text)
-        }
-        .font(.caption2.weight(.semibold))
-        .foregroundColor(.primary)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(
-            Capsule(style: .continuous)
-                .fill(active ? colorPack.secondaryAccent.opacity(0.2) : Color(.secondarySystemBackground))
-        )
-        .overlay(
-            Capsule(style: .continuous)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-        )
-    }
-
-    private func formatTime(hour: Int, minute: Int) -> String {
-        var comps = DateComponents()
-        comps.hour = hour
-        comps.minute = minute
-        let calendar = Calendar.current
-        let date = calendar.date(from: comps) ?? Date()
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
     }
 
     // Extracted to keep body light for type-checker
@@ -576,6 +381,7 @@ struct ContentView: View {
             selectedCategory: $selectedCategory,
             searchText: $searchText,
             showStreakPopup: $showStreakPopup,
+            focusLine: focusLine(for:),
             onShare: { quote in
                 prepareShare(
                     for: quote,
@@ -625,6 +431,8 @@ struct ContentView: View {
                     isPhotoBackground: isPhotoBackground
                 )
             }
+            // Keep the quote card from collapsing when the search keyboard appears.
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
     }
 
@@ -634,17 +442,26 @@ struct ContentView: View {
              Button {
                  showingFavorites = true
              } label: {
-                 Image(systemName: "list.star")
-                     .accessibilityLabel("Show favorite quotes")
+                 Image(systemName: "books.vertical")
+                     .accessibilityLabel("Library: favorites and reflections")
              }
         }
         ToolbarItem(placement: .navigationBarTrailing) {
+            let streak = engagementTracker.summary.currentStreak
             Button {
-                showingEnhancements = true
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+                    showStreakPopup.toggle()
+                }
             } label: {
-                Image(systemName: "ellipsis.circle")
-                    .accessibilityLabel("More options")
+                HStack(spacing: 3) {
+                    Image(systemName: streak > 0 ? "flame.fill" : "flame")
+                    Text("\(streak)")
+                        .monospacedDigit()
+                }
+                .font(.subheadline.weight(.semibold))
             }
+            .accessibilityLabel(streak == 1 ? "Streak: 1 day" : "Streak: \(streak) days")
+            .accessibilityHint(showStreakPopup ? "Hides streak details" : "Shows streak details")
         }
         ToolbarItem(placement: .navigationBarLeading) {
             Button {
@@ -681,7 +498,6 @@ struct ContentView: View {
             if result.reminderEnabled {
                 updateNotificationSchedule(requestAuthorizationIfNeeded: true)
             }
-            presentStreakPopupTemporarily()
         }
     }
 
@@ -703,6 +519,12 @@ struct ContentView: View {
                 withAnimation(.easeInOut(duration: 0.25)) {
                     showStreakPopup = false
                 }
+            }
+            .accessibilityAction(.escape) {
+                showStreakPopup = false
+            }
+            .accessibilityAction(named: "Close streak details") {
+                showStreakPopup = false
             }
             .zIndex(1000)
         }
@@ -762,7 +584,15 @@ struct ContentView: View {
                     favoritesManager: favoritesManager,
                     engagementTracker: engagementTracker,
                     noteManager: noteManager,
-                    dailyResetManager: dailyResetManager
+                    dailyResetManager: dailyResetManager,
+                    onOpenQuote: { quote in
+                        viewModel.currentQuote = quote
+                        // Switching to the quote's category keeps it visible (the filter sync leaves
+                        // a matching quote alone); "All" already includes it.
+                        if selectedCategory != "All" && selectedCategory != quote.category {
+                            selectedCategory = quote.category
+                        }
+                    }
                 )
             }
             .toolbarColorScheme(navigationBarColorScheme, for: .navigationBar)
@@ -823,14 +653,8 @@ struct ContentView: View {
                     selectedFontStyle: $selectedFontStyleRawValue,
                     selectedBackgroundStyle: $selectedBackgroundStyleRawValue,
                     customReminders: $customReminders,
+                    notificationsDenied: notificationsDenied,
                     onResetAllData: resetAllLocalData
-                )
-            }
-            .sheet(isPresented: $showingEnhancements) {
-                enhancementsSheet(
-                    categories: categories,
-                    categoryCounts: categoryCounts,
-                    colorPack: colorPack
                 )
             }
             .fullScreenCover(isPresented: $showingOnboarding) {
@@ -858,8 +682,6 @@ struct ContentView: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                         showingOnboarding = true
                     }
-                } else {
-                    presentStreakPopupTemporarily()
                 }
 
                 if hasCompletedOnboarding {
@@ -875,6 +697,9 @@ struct ContentView: View {
             .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
                 refreshDailyContentIfNeeded()
                 updateNotificationSchedule()
+            }
+            .onChange(of: showingSettings) { isShowing in
+                if isShowing { refreshNotificationPermission() }
             }
             .onChange(of: dailyReminderHour) { _ in updateNotificationSchedule() }
             .onChange(of: dailyReminderMinute) { _ in updateNotificationSchedule() }
@@ -918,6 +743,7 @@ private struct QuoteLayoutView: View {
     @Binding var selectedCategory: String
     @Binding var searchText: String
     @Binding var showStreakPopup: Bool
+    let focusLine: (Quote) -> String
     let onShare: (Quote) -> Void
     @ObservedObject var engagementTracker: EngagementTracker
     @ObservedObject var dailyResetManager: DailyResetManager
@@ -934,6 +760,12 @@ private struct QuoteLayoutView: View {
     let minQuoteFontSize: CGFloat
     let maxQuoteFontSize: CGFloat
     let fontHeightScaleFactor: CGFloat
+
+    @Environment(\.dismissSearch) private var dismissSearch
+    // Scales the geometry-derived quote size with the user's Dynamic Type setting.
+    @ScaledMetric(relativeTo: .title) private var quoteTextScale: CGFloat = 1
+    // Set when a search result is picked so clearing the search keeps that quote.
+    @State private var keepCurrentQuoteOnNextSync = false
 
     private func showNextQuote(categoryFilter: String?) {
         if let currentQuote = viewModel.currentQuote {
@@ -958,7 +790,8 @@ private struct QuoteLayoutView: View {
         let quoteAreaMaxHeight = size.height * quoteHeightFactor
         let cardMinHeightMultiplier: CGFloat = isCompactHeight ? 0.66 : 0.9
         let adjustedFontScale = fontHeightScaleFactor * (isCompactHeight ? 0.85 : 1.0)
-        let calculatedQuoteFontSize = max(minQuoteFontSize, min(quoteAreaMaxHeight * adjustedFontScale, maxQuoteFontSize))
+        let baseQuoteFontSize = max(minQuoteFontSize, min(quoteAreaMaxHeight * adjustedFontScale, maxQuoteFontSize))
+        let calculatedQuoteFontSize = min(baseQuoteFontSize * quoteTextScale, maxQuoteFontSize * 1.5)
         let calculatedAuthorFontSize = max(minQuoteFontSize * 0.6, min(calculatedQuoteFontSize * 0.5, maxQuoteFontSize * 0.6))
         let horizontalPadding: CGFloat = isCompactHeight ? 12 : 16
         let filteredQuotes = visibleQuotes()
@@ -991,6 +824,12 @@ private struct QuoteLayoutView: View {
                     .frame(width: size.width, height: size.height, alignment: .top)
             }
         }
+        .onChange(of: selectedCategory) { _ in
+            syncCurrentQuoteWithFilters()
+        }
+        .onChange(of: searchText) { _ in
+            syncCurrentQuoteWithFilters()
+        }
     }
 
     @ViewBuilder
@@ -1015,6 +854,8 @@ private struct QuoteLayoutView: View {
             VStack(spacing: containerSpacing) {
                 if filteredQuotes.isEmpty, viewModel.errorMessage == nil {
                     filteredEmptyState(isSearching: isSearching, categoryFilter: categoryFilter)
+                } else if isSearching {
+                    searchResultsList(filteredQuotes, horizontalPadding: horizontalPadding)
                 } else if let currentQuote {
                     quoteCard(
                         quote: currentQuote,
@@ -1033,7 +874,7 @@ private struct QuoteLayoutView: View {
                         .foregroundColor(.white)
                 }
 
-                if let quoteForButtons = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
+                if !isSearching, let quoteForButtons = currentQuote {
                     dailyResetButton(
                         isPhotoBackground: isPhotoBackground,
                         horizontalPadding: horizontalPadding
@@ -1071,6 +912,8 @@ private struct QuoteLayoutView: View {
                 if filteredQuotes.isEmpty, viewModel.errorMessage == nil {
                     filteredEmptyState(isSearching: isSearching, categoryFilter: categoryFilter)
                     Spacer()
+                } else if isSearching {
+                    searchResultsList(filteredQuotes, horizontalPadding: horizontalPadding)
                 } else if let currentQuote {
                     quoteCard(
                         quote: currentQuote,
@@ -1091,7 +934,7 @@ private struct QuoteLayoutView: View {
                     Spacer()
                 }
 
-                if let quoteForButtons = filteredQuotes.first(where: { $0.id == viewModel.currentQuote?.id }) ?? filteredQuotes.first {
+                if !isSearching, let quoteForButtons = currentQuote {
                     dailyResetButton(
                         isPhotoBackground: isPhotoBackground,
                         horizontalPadding: horizontalPadding
@@ -1102,17 +945,28 @@ private struct QuoteLayoutView: View {
                         isPhotoBackground: isPhotoBackground,
                         horizontalPadding: horizontalPadding
                     )
+
+                    focusTip(for: quoteForButtons, horizontalPadding: horizontalPadding)
                 }
             }
             .padding(.top, topPadding)
             .padding(.bottom, bottomPadding)
-            .onChange(of: selectedCategory) { _ in
-                syncCurrentQuoteWithFilters()
-            }
-            .onChange(of: searchText) { _ in
-                syncCurrentQuoteWithFilters()
-            }
         }
+    }
+
+    /// A one-line nudge tied to the quote's category, filling the space under the actions.
+    private func focusTip(for quote: Quote, horizontalPadding: CGFloat) -> some View {
+        Label {
+            Text(focusLine(quote))
+        } icon: {
+            Image(systemName: "lightbulb.fill")
+        }
+        .font(.footnote.weight(.medium))
+        .foregroundColor(.white.opacity(0.85))
+        .multilineTextAlignment(.leading)
+        .padding(.horizontal, horizontalPadding + 8)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .accessibilityLabel("Today's focus: \(focusLine(quote))")
     }
 
     @ViewBuilder
@@ -1148,12 +1002,73 @@ private struct QuoteLayoutView: View {
                             )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("\(category) category")
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
             .padding(.horizontal, horizontalPadding)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
         .accessibilityLabel("Filter quotes by category")
+    }
+
+    @ViewBuilder
+    private func searchResultsList(_ results: [Quote], horizontalPadding: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(results.count == 1 ? "1 matching quote" : "\(results.count) matching quotes")
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(.white.opacity(0.85))
+                .accessibilityAddTraits(.isHeader)
+
+            ScrollView {
+                LazyVStack(spacing: 10) {
+                    ForEach(results) { quote in
+                        Button {
+                            selectSearchResult(quote)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("\"\(quote.quote)\"")
+                                    .font(.body.weight(.semibold))
+                                    .foregroundColor(.white)
+                                    .multilineTextAlignment(.leading)
+                                    .lineLimit(4)
+                                HStack {
+                                    Text("- \(quote.author)")
+                                    Spacer()
+                                    Text(quote.category)
+                                }
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.85))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(14)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(Color.black.opacity(0.28))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(Color.white.opacity(0.16), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityHint("Shows this quote on the home screen")
+                    }
+                }
+                .padding(.bottom, 24)
+            }
+            .scrollDismissesKeyboard(.immediately)
+        }
+        .padding(.horizontal, horizontalPadding)
+    }
+
+    private func selectSearchResult(_ quote: Quote) {
+        keepCurrentQuoteOnNextSync = true
+        viewModel.currentQuote = quote
+        searchText = ""
+        dismissSearch()
     }
 
     @ViewBuilder
@@ -1163,9 +1078,21 @@ private struct QuoteLayoutView: View {
                 Text("No results for \"\(searchText.trimmingCharacters(in: .whitespacesAndNewlines))\"")
                     .font(.headline)
                     .foregroundColor(.white)
-                Text("Try a different quote snippet or author name.")
+                Text(categoryFilter == nil
+                     ? "Try a different quote snippet or author name."
+                     : "Only \(categoryFilter ?? "") quotes are searched. Try All or a different word.")
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.85))
+                HStack(spacing: 10) {
+                    if categoryFilter != nil {
+                        emptyStateButton("Search all categories") { selectedCategory = "All" }
+                    }
+                    emptyStateButton("Clear search") {
+                        searchText = ""
+                        dismissSearch()
+                    }
+                }
+                .padding(.top, 6)
             } else if let categoryFilter {
                 Text("No quotes in \(categoryFilter) yet")
                     .font(.headline)
@@ -1173,6 +1100,8 @@ private struct QuoteLayoutView: View {
                 Text("Switch categories or clear filters to see more quotes.")
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.85))
+                emptyStateButton("Show all quotes") { selectedCategory = "All" }
+                    .padding(.top, 6)
             } else {
                 Text("No quotes available")
                     .font(.headline)
@@ -1181,6 +1110,18 @@ private struct QuoteLayoutView: View {
         }
         .multilineTextAlignment(.center)
         .padding(.horizontal, 24)
+    }
+
+    private func emptyStateButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(.black)
+                .padding(.horizontal, 14)
+                .frame(minHeight: 44)
+                .background(Capsule().fill(Color.white.opacity(0.92)))
+        }
+        .buttonStyle(.plain)
     }
 
     private var normalizedSearchText: String {
@@ -1197,9 +1138,21 @@ private struct QuoteLayoutView: View {
         viewModel.filterQuotes(categoryFilteredQuotes(), matching: searchText)
     }
 
+    /// Keeps the home quote meaningful as filters change: "All" with no search returns to
+    /// today's quote, a category keeps the current quote when it fits or picks an unseen one.
+    /// While searching, the results list is shown instead, so the current quote is left alone.
     private func syncCurrentQuoteWithFilters() {
-        let filtered = visibleQuotes()
-        viewModel.currentQuote = filtered.first
+        if keepCurrentQuoteOnNextSync {
+            keepCurrentQuoteOnNextSync = false
+            return
+        }
+        guard normalizedSearchText.isEmpty else { return }
+
+        if selectedCategory == "All" {
+            viewModel.setCurrentQuoteToDaily()
+        } else if viewModel.currentQuote?.category != selectedCategory {
+            viewModel.showNewRandomQuote(category: selectedCategory)
+        }
     }
 
     // MARK: - Subviews
@@ -1221,7 +1174,7 @@ private struct QuoteLayoutView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 11)
             .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(colorPack.accentColor.opacity(isPhotoBackground ? 0.72 : 0.9))
             )
         }
@@ -1261,9 +1214,16 @@ private struct QuoteLayoutView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(colorPack.cardBackground)
-                .opacity(isPhotoBackground ? 0.0 : 0.92)
+            ZStack {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(colorPack.cardBackground)
+                    .opacity(isPhotoBackground ? 0.0 : 0.92)
+                // Photo backgrounds get a soft scrim so white text stays readable on bright images.
+                if isPhotoBackground {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.black.opacity(0.32))
+                }
+            }
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -1288,6 +1248,11 @@ private struct QuoteLayoutView: View {
         .onTapGesture {
             showNextQuote(categoryFilter: selectedCategory == "All" ? nil : selectedCategory)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("Double tap for another quote")
+        .accessibilityAction(named: "Next quote") {
+            showNextQuote(categoryFilter: selectedCategory == "All" ? nil : selectedCategory)
+        }
         .padding(.horizontal, horizontalPadding)
     }
 
@@ -1309,73 +1274,110 @@ private struct QuoteLayoutView: View {
         )
         let heartStyle: AnyShapeStyle = isFavorite ? AnyShapeStyle(favoriteGradient) : AnyShapeStyle(.white)
 
-        HStack(spacing: 20) {
-            Button {
-                noteDraft = noteManager.note(for: quote) ?? ""
-                showingNoteEditor = true
-            } label: {
-                Label("Note", systemImage: "pencil.and.outline")
-                    .font(.caption.bold())
-                    .foregroundColor(.white)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(colorPack.secondaryAccent.opacity(isPhotoBackground ? 0.1 : 0.45))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
-            )
+        let hasNote = noteManager.note(for: quote) != nil
+        let nextAction = {
+            showNextQuote(categoryFilter: categoryFilter)
+        }
 
-            Button {
-                let isNowFavorite = viewModel.toggleFavorite(for: quote)
-                if isNowFavorite {
-                    personalizationManager.recordSaved(quote)
-                }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: isFavorite ? "heart.fill" : "heart")
-                        .foregroundStyle(heartStyle)
-                    Text("Favorite")
-                        .foregroundColor(.white)
-                }
-                .font(.caption.bold())
-                .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(colorPack.secondaryAccent.opacity(isPhotoBackground ? 0.1 : 0.45))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
-                )
+        // Falls back to icon-only buttons when labels do not fit (small screens, large text).
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) {
+                actionButtonRow(quote: quote, isFavorite: isFavorite, hasNote: hasNote, heartStyle: heartStyle, showTitles: true, next: nextAction)
             }
-
-            Button {
-                onShare(quote)
-            } label: {
-                Label("Share", systemImage: "square.and.arrow.up")
-                    .font(.caption.bold())
-                    .foregroundColor(.white)
-                    .accessibilityLabel("Share this quote")
+            HStack(spacing: 12) {
+                actionButtonRow(quote: quote, isFavorite: isFavorite, hasNote: hasNote, heartStyle: heartStyle, showTitles: false, next: nextAction)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(colorPack.secondaryAccent.opacity(isPhotoBackground ? 0.1 : 0.45))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.white.opacity(isPhotoBackground ? 0.0 : 0.18), lineWidth: isPhotoBackground ? 0 : 1)
-            )
         }
         .padding(.bottom, 10)
         .padding(.horizontal, horizontalPadding)
+    }
+
+    @ViewBuilder
+    private func actionButtonRow(
+        quote: Quote,
+        isFavorite: Bool,
+        hasNote: Bool,
+        heartStyle: AnyShapeStyle,
+        showTitles: Bool,
+        next: @escaping () -> Void
+    ) -> some View {
+        Button {
+            noteDraft = noteManager.note(for: quote) ?? ""
+            showingNoteEditor = true
+        } label: {
+            actionLabel(
+                title: "Note",
+                icon: Image(systemName: hasNote ? "note.text" : "pencil.and.outline"),
+                iconStyle: AnyShapeStyle(.white),
+                showTitle: showTitles
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(hasNote ? "Edit note" : "Add note")
+
+        Button {
+            let isNowFavorite = viewModel.toggleFavorite(for: quote)
+            if isNowFavorite {
+                personalizationManager.recordSaved(quote)
+            }
+        } label: {
+            actionLabel(
+                title: "Favorite",
+                icon: Image(systemName: isFavorite ? "heart.fill" : "heart"),
+                iconStyle: heartStyle,
+                showTitle: showTitles
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isFavorite ? "Remove from favorites" : "Add to favorites")
+
+        Button {
+            onShare(quote)
+        } label: {
+            actionLabel(
+                title: "Share",
+                icon: Image(systemName: "square.and.arrow.up"),
+                iconStyle: AnyShapeStyle(.white),
+                showTitle: showTitles
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Share this quote")
+
+        Button(action: next) {
+            actionLabel(
+                title: "Next",
+                icon: Image(systemName: "arrow.forward"),
+                iconStyle: AnyShapeStyle(.white),
+                showTitle: showTitles
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Next quote")
+    }
+
+    private func actionLabel(title: String, icon: Image, iconStyle: AnyShapeStyle, showTitle: Bool) -> some View {
+        HStack(spacing: 6) {
+            icon
+                .foregroundStyle(iconStyle)
+            if showTitle {
+                Text(title)
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+            }
+        }
+        .font(.subheadline.bold())
+        .padding(.horizontal, 12)
+        .frame(minWidth: 44, minHeight: 44)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(isPhotoBackground ? Color.black.opacity(0.35) : colorPack.secondaryAccent.opacity(0.45))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.white.opacity(0.18), lineWidth: 1)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
@@ -1396,11 +1398,14 @@ struct StreakHeaderView: View {
                     .font(.subheadline)
                     .foregroundColor(Color.white.opacity(0.85))
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("You are on a \(summary.currentStreak) day streak. Best streak \(summary.bestStreak).")
 
             StreakHistoryRow(history: summary.recentHistory, colorPack: colorPack)
 
             if let lastReset = summary.lastResetCompleted {
-                Text("Last reset \(lastReset, format: .relative(presentation: .numeric))")
+                // Reset days are stored at midnight, so describe them by day rather than by hours.
+                Text("Last reset \(Self.relativeDayText(for: lastReset))")
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.8))
             } else {
@@ -1436,8 +1441,20 @@ struct StreakHeaderView: View {
         )
         .shadow(color: colorPack.accentColor.opacity(0.25), radius: 12, x: 0, y: 8)
         .padding(.horizontal)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("You are on a \(summary.currentStreak) day streak. Best streak \(summary.bestStreak).")
+        .accessibilityElement(children: .contain)
+    }
+
+    static func relativeDayText(for day: Date, now: Date = Date(), calendar: Calendar = .current) -> String {
+        let days = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: day),
+            to: calendar.startOfDay(for: now)
+        ).day ?? 0
+        switch days {
+        case ..<1: return "today"
+        case 1: return "yesterday"
+        default: return "\(days) days ago"
+        }
     }
 }
 
@@ -1446,9 +1463,9 @@ struct StreakHistoryRow: View {
     let colorPack: ThemeColorPack
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(history) { day in
+        // The last 7 days fit without scrolling, so today is always visible at the trailing edge.
+        HStack(spacing: 0) {
+                ForEach(Array(history.suffix(7))) { day in
                     VStack(spacing: 4) {
                         ZStack {
                             Circle()
@@ -1465,10 +1482,10 @@ struct StreakHistoryRow: View {
                             .font(.caption2)
                             .foregroundColor(.white.opacity(0.7))
                     }
+                    .frame(maxWidth: .infinity)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(historyAccessibility(for: day))
                 }
-            }
         }
     }
 
@@ -1747,6 +1764,30 @@ struct AppearancePreviewCard: View {
     }
 }
 
+// MARK: - Notification Permission Notice
+/// Explains that reminders cannot fire and links to the app's notification settings.
+struct NotificationsDeniedNotice: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Notifications are off", systemImage: "bell.slash.fill")
+                .font(.headline)
+                .foregroundColor(.orange)
+            Text("Reminders won't arrive until you allow notifications for Daily Motivation in iOS Settings.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Button("Open Notification Settings") {
+                if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .font(.subheadline.weight(.semibold))
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .contain)
+    }
+}
+
 // MARK: - SettingsView
 struct SettingsView: View {
     @Binding var dailyReminderHour: Int
@@ -1762,9 +1803,12 @@ struct SettingsView: View {
     @Binding var selectedFontStyle: String
     @Binding var selectedBackgroundStyle: String
     @Binding var customReminders: [CustomReminder]
+    let notificationsDenied: Bool
     let onResetAllData: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var showingResetConfirmation = false
+    @State private var showingSupportEmailCopied = false
+    private static let supportEmail = "trample_pies_4l@icloud.com"
 
     // Helper to create a Date from hour/minute
     private var reminderTime: Date {
@@ -1795,9 +1839,14 @@ struct SettingsView: View {
 
         return NavigationStack {
             Form {
+                if notificationsDenied {
+                    Section {
+                        NotificationsDeniedNotice()
+                    }
+                }
+
                 Section(header: Text("Daily Reminder Time")) {
                     Toggle("Daily reminder", isOn: $dailyReminderEnabled)
-                        .tint(.green)
                     DatePicker(
                         "Reminder Time",
                         selection: Binding(
@@ -1861,13 +1910,16 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
                                 Toggle("Enabled", isOn: $reminder.isEnabled)
+                                    .accessibilityLabel("\(reminderDisplayTitle(reminder)) enabled")
                                 Spacer()
                                 Button(role: .destructive) {
                                     removeCustomReminder(id: reminder.id)
                                 } label: {
                                     Image(systemName: "trash")
+                                        .frame(minWidth: 44, minHeight: 44)
                                 }
                                 .buttonStyle(.borderless)
+                                .accessibilityLabel("Delete \(reminderDisplayTitle(reminder)) reminder")
                             }
 
                             TextField("Reminder title", text: $reminder.title)
@@ -1880,6 +1932,12 @@ struct SettingsView: View {
                             )
 
                             weekdayPicker(weekdays: $reminder.weekdays)
+
+                            if reminder.weekdays.isEmpty {
+                                Label("Pick at least one day so this reminder can fire.", systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            }
                         }
                         .padding(.vertical, 4)
                     }
@@ -1932,11 +1990,12 @@ struct SettingsView: View {
                     .padding(.top, 6)
                 }
 
-                Section(header: Text("Privacy and Support")) {
+                Section {
                     Label("Your data stays on this device", systemImage: "lock.shield.fill")
-                    Link(
-                        destination: URL(string: "mailto:trample_pies_4l@icloud.com")!
-                    ) {
+                        .accessibilityHint("Favorites, notes, resets, and reminders are never uploaded")
+                    Button {
+                        contactSupport()
+                    } label: {
                         Label("Contact support", systemImage: "envelope")
                     }
                     Link(
@@ -1949,8 +2008,13 @@ struct SettingsView: View {
                     } label: {
                         Label("Reset all local data", systemImage: "trash")
                     }
+                } header: {
+                    Text("Privacy and Support")
+                } footer: {
+                    Text(appVersionText)
                 }
             }
+            .themedScreen()
             .navigationTitle("Settings")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -1967,7 +2031,41 @@ struct SettingsView: View {
             } message: {
                 Text("This removes favorites, notes, Daily Resets, streaks, preferences, and reminders from this device.")
             }
+            .alert("Support email copied", isPresented: $showingSupportEmailCopied) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("No mail app is set up, so \(Self.supportEmail) was copied. Paste it into any email app.")
+            }
         }
+    }
+
+    /// Opens a prefilled email; falls back to copying the address when no mail app is available.
+    private func contactSupport() {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = Self.supportEmail
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: "Daily Motivation support"),
+            URLQueryItem(name: "body", value: "\n\n---\n\(appVersionText)\niOS \(UIDevice.current.systemVersion)")
+        ]
+        guard let url = components.url else { return }
+        UIApplication.shared.open(url) { opened in
+            guard !opened else { return }
+            UIPasteboard.general.string = Self.supportEmail
+            showingSupportEmailCopied = true
+        }
+    }
+
+    private var appVersionText: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "Daily Motivation \(version) (\(build))"
+    }
+
+    private func reminderDisplayTitle(_ reminder: CustomReminder) -> String {
+        let trimmed = reminder.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Daily Motivation" : trimmed
     }
 
     private func addCustomReminder() {
@@ -2019,8 +2117,7 @@ struct SettingsView: View {
                         } label: {
                             Text(shortWeekdayLabel(for: weekday))
                                 .font(.caption.weight(.semibold))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
+                                .frame(minWidth: 36, minHeight: 36)
                                 .background(
                                     Capsule()
                                         .fill(isSelected ? Color.accentColor.opacity(0.2) : Color(.secondarySystemBackground))
@@ -2034,6 +2131,8 @@ struct SettingsView: View {
                                 )
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(fullWeekdayLabel(for: weekday))
+                        .accessibilityAddTraits(isSelected ? .isSelected : [])
                     }
                 }
                 .padding(.vertical, 2)
@@ -2049,8 +2148,14 @@ struct SettingsView: View {
         }
     }
 
+    private func fullWeekdayLabel(for weekday: ReminderWeekday) -> String {
+        let symbols = Calendar.current.weekdaySymbols
+        let index = max(0, min(symbols.count - 1, weekday.rawValue - 1))
+        return symbols[index]
+    }
+
     private func shortWeekdayLabel(for weekday: ReminderWeekday) -> String {
-        let symbols = Calendar.current.veryShortWeekdaySymbols
+        let symbols = Calendar.current.shortWeekdaySymbols
         let index = max(0, min(symbols.count - 1, weekday.rawValue - 1))
         return symbols[index]
     }
@@ -2100,6 +2205,14 @@ private struct NoteEditorView: View {
     @State private var noteText: String = ""
     @FocusState private var isFocused: Bool
 
+    private var trimmedNote: String {
+        noteText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var isClearingExistingNote: Bool {
+        !initialNote.isEmpty && trimmedNote.isEmpty
+    }
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 12) {
@@ -2113,21 +2226,29 @@ private struct NoteEditorView: View {
                 TextEditor(text: $noteText)
                     .padding(8)
                     .frame(minHeight: 180)
-                    .background(Color(.secondarySystemBackground))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .focused($isFocused)
+
+                if !initialNote.isEmpty {
+                    Text("Clear the text to delete this note.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
 
                 Spacer()
             }
             .padding()
-            .navigationTitle("Add note")
+            .themedScreen()
+            .navigationTitle(initialNote.isEmpty ? "Add note" : "Edit note")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { onCancel() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { onSave(noteText) }
-                        .disabled(noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    // Saving empty text deletes an existing note; a brand-new empty note has nothing to save.
+                    Button(isClearingExistingNote ? "Delete" : "Save") { onSave(noteText) }
+                        .disabled(initialNote.isEmpty && trimmedNote.isEmpty)
                 }
             }
             .onAppear {
