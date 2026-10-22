@@ -108,6 +108,9 @@ struct OnboardingView: View {
                                             Text(category)
                                                 .foregroundColor(.white)
                                                 .font(.subheadline)
+                                                // Narrow screens (e.g. iPhone Duo outer display) would hyphenate long names.
+                                                .lineLimit(1)
+                                                .minimumScaleFactor(0.8)
                                             Spacer()
                                         }
                                         .padding()

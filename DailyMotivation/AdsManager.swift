@@ -26,6 +26,15 @@ final class AdsManager: NSObject, ObservableObject {
 
     private static let lastInterstitialKey = "ads.lastInterstitialDate"
 
+    /// Debug-only launch argument (-DMHideAds) for clean App Store screenshots.
+    static var adsSuppressedForScreenshots: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("-DMHideAds")
+        #else
+        return false
+        #endif
+    }
+
     static var bannerAdUnitID: String { infoValue("DMBannerAdUnitID") }
     static var interstitialAdUnitID: String { infoValue("DMInterstitialAdUnitID") }
 
@@ -39,7 +48,7 @@ final class AdsManager: NSObject, ObservableObject {
     /// Runs the consent flow, then the tracking prompt, then starts the Mobile Ads SDK.
     /// Call after onboarding so prompts never stack on top of the welcome screen.
     func startIfNeeded() {
-        guard !isStarting, !canShowAds, RemoteSettings.adsEnabled else { return }
+        guard !isStarting, !canShowAds, RemoteSettings.adsEnabled, !Self.adsSuppressedForScreenshots else { return }
         isStarting = true
 
         let parameters = RequestParameters()
