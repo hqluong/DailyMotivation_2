@@ -1220,21 +1220,18 @@ private struct QuoteLayoutView: View {
         horizontalPadding: CGFloat
     ) -> some View {
         VStack {
-            ScrollView {
-                VStack(spacing: 10) {
-                    Spacer(minLength: 10)
-                    Text("\"\(quote.quote)\"")
-                        .font(fontStyle.quoteFont(size: calculatedQuoteFontSize))
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.white)
-                        .padding(.horizontal)
-                    Text("- \(quote.author)")
-                        .font(fontStyle.authorFont(size: calculatedAuthorFontSize))
-                        .foregroundColor(.white.opacity(0.85))
-                        .padding(.bottom, 5)
-                    Spacer(minLength: 10)
+            // Picks the largest font size at which the whole quote and author fit the card,
+            // so long quotes shrink instead of needing to be scrolled.
+            ViewThatFits(in: .vertical) {
+                ForEach(Self.fittingFontSizes(from: calculatedQuoteFontSize), id: \.self) { size in
+                    quoteTextBlock(
+                        quote: quote,
+                        quoteSize: size,
+                        authorSize: min(calculatedAuthorFontSize, max(size * 0.55, 13))
+                    )
                 }
-                .frame(minHeight: quoteAreaMaxHeight * cardMinHeightMultiplier)
+                // Last resort (e.g. the largest accessibility text sizes): scale down further.
+                quoteTextBlock(quote: quote, quoteSize: 16, authorSize: 13, allowsScaling: true)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -1280,6 +1277,42 @@ private struct QuoteLayoutView: View {
             showNextQuote(categoryFilter: selectedCategory == "All" ? nil : selectedCategory)
         }
         .padding(.horizontal, horizontalPadding)
+    }
+
+    private func quoteTextBlock(
+        quote: Quote,
+        quoteSize: CGFloat,
+        authorSize: CGFloat,
+        allowsScaling: Bool = false
+    ) -> some View {
+        VStack(spacing: 10) {
+            Text("\"\(quote.quote)\"")
+                .font(fontStyle.quoteFont(size: quoteSize))
+                .multilineTextAlignment(.center)
+                .foregroundColor(.white)
+                .minimumScaleFactor(allowsScaling ? 0.5 : 1)
+                // Report the full wrapped height so ViewThatFits can tell when it doesn't fit.
+                .fixedSize(horizontal: false, vertical: !allowsScaling)
+                .padding(.horizontal)
+            Text("- \(quote.author)")
+                .font(fontStyle.authorFont(size: authorSize))
+                .foregroundColor(.white.opacity(0.85))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .padding(.vertical, 10)
+    }
+
+    /// Font sizes from the layout's preferred size down to a readable floor, ~8% apart.
+    private static func fittingFontSizes(from preferred: CGFloat) -> [CGFloat] {
+        var sizes: [CGFloat] = []
+        var size = preferred
+        while size > 17 {
+            sizes.append(size.rounded())
+            size *= 0.92
+        }
+        sizes.append(17)
+        return sizes
     }
 
     @ViewBuilder
