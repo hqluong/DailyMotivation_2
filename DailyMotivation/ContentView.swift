@@ -138,25 +138,29 @@ struct ContentView: View {
         persistPreferredCategories([selectedCategory])
     }
 
-    private func buildNotificationQuotes() -> (daily: [Quote], morning: [Quote], evening: [Quote])? {
+    private func buildNotificationQuotes() -> (daily: [Quote], morning: [Quote], evening: [Quote], custom: [Quote])? {
         let preferredCategories = preferredNotificationCategories()
+        // Four interleaved streams so the daily, morning, evening and custom notifications
+        // on the same day each show a different quote.
         let planned = viewModel.plannedQuotes(
-            count: notificationHorizonDays * 3,
+            count: notificationHorizonDays * 4,
             preferredCategories: preferredCategories
         )
         guard !planned.isEmpty else { return nil }
 
         return (
-            daily: stride(from: 0, to: planned.count, by: 3).map { planned[$0] },
-            morning: stride(from: 1, to: planned.count, by: 3).map { planned[$0] },
-            evening: stride(from: 2, to: planned.count, by: 3).map { planned[$0] }
+            daily: stride(from: 0, to: planned.count, by: 4).map { planned[$0] },
+            morning: stride(from: 1, to: planned.count, by: 4).map { planned[$0] },
+            evening: stride(from: 2, to: planned.count, by: 4).map { planned[$0] },
+            custom: stride(from: 3, to: planned.count, by: 4).map { planned[$0] }
         )
     }
 
     private func scheduleNotifications(
         dailyQuotes: [Quote],
         morningQuotes: [Quote],
-        eveningQuotes: [Quote]
+        eveningQuotes: [Quote],
+        customQuotes: [Quote]
     ) {
         if dailyReminderEnabled {
             NotificationManager.shared.scheduleDailyQuoteNotifications(
@@ -179,9 +183,15 @@ struct ContentView: View {
             eveningMinute: smartEveningMinute
         )
 
-        if let referenceQuote = dailyQuotes.first {
+        let customPool = customQuotes.isEmpty ? dailyQuotes : customQuotes
+        if let fallback = customPool.first {
             NotificationManager.shared.updateReminders(
-                customReminders.map { $0.asNotification(quote: referenceQuote) }
+                customReminders.enumerated().map { index, reminder in
+                    reminder.asNotification(
+                        quotesByWeekday: CustomReminder.weekdayQuotes(customPool, offset: index),
+                        fallback: fallback
+                    )
+                }
             )
         }
     }
@@ -194,7 +204,8 @@ struct ContentView: View {
         scheduleNotifications(
             dailyQuotes: quotes.daily,
             morningQuotes: quotes.morning,
-            eveningQuotes: quotes.evening
+            eveningQuotes: quotes.evening,
+            customQuotes: quotes.custom
         )
     }
 

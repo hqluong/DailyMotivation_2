@@ -393,7 +393,7 @@ final class NotificationManager {
                     ScheduledRequestPlan(
                         identifier: Identifier.reminderRequestIdentifier(forLogicalID: logicalID, weekday: weekday),
                         title: reminder.title,
-                        body: reminder.body,
+                        body: reminder.body(for: weekday),
                         hour: reminder.schedule.hour,
                         minute: reminder.schedule.minute,
                         weekday: weekday,

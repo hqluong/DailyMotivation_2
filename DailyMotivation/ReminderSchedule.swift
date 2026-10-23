@@ -40,18 +40,26 @@ struct ReminderNotification: Codable, Hashable, Identifiable, Sendable {
     var schedule: ReminderSchedule
     var title: String
     var body: String
+    /// Optional per-weekday text (e.g. a different quote each day); `body` is the fallback.
+    var bodiesByWeekday: [ReminderWeekday: String]
     var playsSound: Bool
 
     init(
         schedule: ReminderSchedule,
         title: String,
         body: String,
+        bodiesByWeekday: [ReminderWeekday: String] = [:],
         playsSound: Bool = true
     ) {
         self.schedule = schedule
         self.title = title
         self.body = body
+        self.bodiesByWeekday = bodiesByWeekday
         self.playsSound = playsSound
+    }
+
+    func body(for weekday: ReminderWeekday) -> String {
+        bodiesByWeekday[weekday] ?? body
     }
 
     var id: String {
