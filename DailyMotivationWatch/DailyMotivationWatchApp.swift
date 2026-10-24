@@ -19,6 +19,8 @@ struct WatchQuoteView: View {
     private var quote: WatchQuote { WatchQuoteStore.quote(offset: offset) }
 
     var body: some View {
+        // NavigationStack reserves the top bar, so scrolled text never slides under the clock.
+        NavigationStack {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 Label(offset == 0 ? "Today" : "More", systemImage: offset == 0 ? "sun.max.fill" : "sparkles")
@@ -50,6 +52,7 @@ struct WatchQuoteView: View {
             }
             .padding(.horizontal, 4)
         }
+        .navigationTitle("Daily Motivation")
         .containerBackground(
             LinearGradient(
                 colors: [Color(red: 1.0, green: 0.54, blue: 0.16).opacity(0.45), .clear],
@@ -58,6 +61,7 @@ struct WatchQuoteView: View {
             ),
             for: .navigation
         )
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { offset = 0 }
         }
