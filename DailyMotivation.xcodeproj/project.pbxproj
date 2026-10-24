@@ -6,7 +6,27 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C7115BFB2EE32D3C00081F62 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C7115BFA2EE32D3C00081F62 /* WidgetKit.framework */; };
+		C7115BFD2EE32D3C00081F62 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C7115BFC2EE32D3C00081F62 /* SwiftUI.framework */; };
+		C7115C0C2EE32D3E00081F62 /* DailyMotivationWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C7115BF82EE32D3C00081F62 /* DailyMotivationWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		D1A000000000000000000021 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000011 /* FirebaseAnalytics */; };
+		D1A000000000000000000022 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000012 /* FirebaseCrashlytics */; };
+		D1A000000000000000000023 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000013 /* FirebaseRemoteConfig */; };
+		D1A000000000000000000024 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000014 /* GoogleMobileAds */; };
+		D1A000000000000000000025 /* GoogleUserMessagingPlatform in Frameworks */ = {isa = PBXBuildFile; productRef = D1A000000000000000000015 /* GoogleUserMessagingPlatform */; };
+		E1B000000000000000000015 /* DailyMotivationWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = E1B000000000000000000003 /* DailyMotivationWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		E1B000000000000000000016 /* DailyMotivationWatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E1B000000000000000000004 /* DailyMotivationWatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
+		C7115C0A2EE32D3E00081F62 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C76C9BAA2D7D83CC004FEF31 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C7115BF72EE32D3C00081F62;
+			remoteInfo = DailyMotivationWidgetExtension;
+		};
 		C76C9BC32D7D83CE004FEF31 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = C76C9BAA2D7D83CC004FEF31 /* Project object */;
@@ -21,17 +41,131 @@
 			remoteGlobalIDString = C76C9BB12D7D83CC004FEF31;
 			remoteInfo = DailyMotivation;
 		};
+		E1B000000000000000000017 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C76C9BAA2D7D83CC004FEF31 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1B000000000000000000001;
+			remoteInfo = DailyMotivationWatch;
+		};
+		E1B000000000000000000018 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C76C9BAA2D7D83CC004FEF31 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E1B000000000000000000002;
+			remoteInfo = DailyMotivationWatchWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		C7115C0D2EE32D3E00081F62 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C7115C0C2EE32D3E00081F62 /* DailyMotivationWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1B000000000000000000014 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				E1B000000000000000000015 /* DailyMotivationWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1B000000000000000000010 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				E1B000000000000000000016 /* DailyMotivationWatchWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		C7115BF82EE32D3C00081F62 /* DailyMotivationWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DailyMotivationWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7115BFA2EE32D3C00081F62 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		C7115BFC2EE32D3C00081F62 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		C76C9BB22D7D83CC004FEF31 /* DailyMotivation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyMotivation.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C76C9BC22D7D83CE004FEF31 /* DailyMotivationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DailyMotivationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C76C9BCC2D7D83CE004FEF31 /* DailyMotivationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DailyMotivationUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1B000000000000000000003 /* DailyMotivationWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyMotivationWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1B000000000000000000004 /* DailyMotivationWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DailyMotivationWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C7115C102EE32D3E00081F62 /* Exceptions for "DailyMotivationWidget" folder in "DailyMotivationWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C7115BF72EE32D3C00081F62 /* DailyMotivationWidgetExtension */;
+		};
+		C7115C152EE334AA00081F62 /* Exceptions for "DailyMotivation" folder in "DailyMotivationWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Quote.swift,
+				quotes.json,
+			);
+			target = C7115BF72EE32D3C00081F62 /* DailyMotivationWidgetExtension */;
+		};
+		E1B000000000000000000021 /* Exceptions for "DailyMotivation" folder in "DailyMotivationWatch" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				quotes.json,
+			);
+			target = E1B000000000000000000001 /* DailyMotivationWatch */;
+		};
+		E1B000000000000000000022 /* Exceptions for "DailyMotivation" folder in "DailyMotivationWatchWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				quotes.json,
+			);
+			target = E1B000000000000000000002 /* DailyMotivationWatchWidgetExtension */;
+		};
+		E1B000000000000000000023 /* Exceptions for "DailyMotivationWatch" folder in "DailyMotivationWatchWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				WatchQuoteStore.swift,
+			);
+			target = E1B000000000000000000002 /* DailyMotivationWatchWidgetExtension */;
+		};
+		E1B000000000000000000024 /* Exceptions for "DailyMotivationWatchWidget" folder in "DailyMotivationWatchWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = E1B000000000000000000002 /* DailyMotivationWatchWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		C7115BFE2EE32D3C00081F62 /* DailyMotivationWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C7115C102EE32D3E00081F62 /* Exceptions for "DailyMotivationWidget" folder in "DailyMotivationWidgetExtension" target */,
+			);
+			path = DailyMotivationWidget;
+			sourceTree = "<group>";
+		};
 		C76C9BB42D7D83CC004FEF31 /* DailyMotivation */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C7115C152EE334AA00081F62 /* Exceptions for "DailyMotivation" folder in "DailyMotivationWidgetExtension" target */,
+				E1B000000000000000000021 /* Exceptions for "DailyMotivation" folder in "DailyMotivationWatch" target */,
+				E1B000000000000000000022 /* Exceptions for "DailyMotivation" folder in "DailyMotivationWatchWidgetExtension" target */,
+			);
 			path = DailyMotivation;
 			sourceTree = "<group>";
 		};
@@ -45,13 +179,43 @@
 			path = DailyMotivationUITests;
 			sourceTree = "<group>";
 		};
+		E1B000000000000000000005 /* DailyMotivationWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E1B000000000000000000023 /* Exceptions for "DailyMotivationWatch" folder in "DailyMotivationWatchWidgetExtension" target */,
+			);
+			path = DailyMotivationWatch;
+			sourceTree = "<group>";
+		};
+		E1B000000000000000000006 /* DailyMotivationWatchWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E1B000000000000000000024 /* Exceptions for "DailyMotivationWatchWidget" folder in "DailyMotivationWatchWidgetExtension" target */,
+			);
+			path = DailyMotivationWatchWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		C7115BF52EE32D3C00081F62 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7115BFD2EE32D3C00081F62 /* SwiftUI.framework in Frameworks */,
+				C7115BFB2EE32D3C00081F62 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C76C9BAF2D7D83CC004FEF31 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1A000000000000000000021 /* FirebaseAnalytics in Frameworks */,
+				D1A000000000000000000022 /* FirebaseCrashlytics in Frameworks */,
+				D1A000000000000000000023 /* FirebaseRemoteConfig in Frameworks */,
+				D1A000000000000000000024 /* GoogleMobileAds in Frameworks */,
+				D1A000000000000000000025 /* GoogleUserMessagingPlatform in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -69,15 +233,42 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E1B000000000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1B000000000000000000012 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C7115BF92EE32D3C00081F62 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C7115BFA2EE32D3C00081F62 /* WidgetKit.framework */,
+				C7115BFC2EE32D3C00081F62 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		C76C9BA92D7D83CC004FEF31 = {
 			isa = PBXGroup;
 			children = (
 				C76C9BB42D7D83CC004FEF31 /* DailyMotivation */,
 				C76C9BC52D7D83CE004FEF31 /* DailyMotivationTests */,
 				C76C9BCF2D7D83CE004FEF31 /* DailyMotivationUITests */,
+				C7115BFE2EE32D3C00081F62 /* DailyMotivationWidget */,
+				E1B000000000000000000005 /* DailyMotivationWatch */,
+				E1B000000000000000000006 /* DailyMotivationWatchWidget */,
+				C7115BF92EE32D3C00081F62 /* Frameworks */,
 				C76C9BB32D7D83CC004FEF31 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +279,9 @@
 				C76C9BB22D7D83CC004FEF31 /* DailyMotivation.app */,
 				C76C9BC22D7D83CE004FEF31 /* DailyMotivationTests.xctest */,
 				C76C9BCC2D7D83CE004FEF31 /* DailyMotivationUITests.xctest */,
+				C7115BF82EE32D3C00081F62 /* DailyMotivationWidgetExtension.appex */,
+				E1B000000000000000000003 /* DailyMotivationWatch.app */,
+				E1B000000000000000000004 /* DailyMotivationWatchWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,6 +289,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		C7115BF72EE32D3C00081F62 /* DailyMotivationWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C7115C112EE32D3E00081F62 /* Build configuration list for PBXNativeTarget "DailyMotivationWidgetExtension" */;
+			buildPhases = (
+				C7115BF42EE32D3C00081F62 /* Sources */,
+				C7115BF52EE32D3C00081F62 /* Frameworks */,
+				C7115BF62EE32D3C00081F62 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C7115BFE2EE32D3C00081F62 /* DailyMotivationWidget */,
+			);
+			name = DailyMotivationWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = DailyMotivationWidgetExtension;
+			productReference = C7115BF82EE32D3C00081F62 /* DailyMotivationWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		C76C9BB12D7D83CC004FEF31 /* DailyMotivation */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C76C9BD62D7D83CE004FEF31 /* Build configuration list for PBXNativeTarget "DailyMotivation" */;
@@ -102,16 +318,26 @@
 				C76C9BAE2D7D83CC004FEF31 /* Sources */,
 				C76C9BAF2D7D83CC004FEF31 /* Frameworks */,
 				C76C9BB02D7D83CC004FEF31 /* Resources */,
+				C7115C0D2EE32D3E00081F62 /* Embed Foundation Extensions */,
+				E1B000000000000000000014 /* Embed Watch Content */,
+				D1A000000000000000000031 /* Upload Crashlytics Symbols */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C7115C0B2EE32D3E00081F62 /* PBXTargetDependency */,
+				E1B000000000000000000019 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				C76C9BB42D7D83CC004FEF31 /* DailyMotivation */,
 			);
 			name = DailyMotivation;
 			packageProductDependencies = (
+				D1A000000000000000000011 /* FirebaseAnalytics */,
+				D1A000000000000000000012 /* FirebaseCrashlytics */,
+				D1A000000000000000000013 /* FirebaseRemoteConfig */,
+				D1A000000000000000000014 /* GoogleMobileAds */,
+				D1A000000000000000000015 /* GoogleUserMessagingPlatform */,
 			);
 			productName = DailyMotivation;
 			productReference = C76C9BB22D7D83CC004FEF31 /* DailyMotivation.app */;
@@ -163,6 +389,52 @@
 			productReference = C76C9BCC2D7D83CE004FEF31 /* DailyMotivationUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		E1B000000000000000000001 /* DailyMotivationWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1B000000000000000000025 /* Build configuration list for PBXNativeTarget "DailyMotivationWatch" */;
+			buildPhases = (
+				E1B000000000000000000007 /* Sources */,
+				E1B000000000000000000008 /* Frameworks */,
+				E1B000000000000000000009 /* Resources */,
+				E1B000000000000000000010 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E1B000000000000000000020 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				E1B000000000000000000005 /* DailyMotivationWatch */,
+			);
+			name = DailyMotivationWatch;
+			packageProductDependencies = (
+			);
+			productName = DailyMotivationWatch;
+			productReference = E1B000000000000000000003 /* DailyMotivationWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E1B000000000000000000002 /* DailyMotivationWatchWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E1B000000000000000000026 /* Build configuration list for PBXNativeTarget "DailyMotivationWatchWidgetExtension" */;
+			buildPhases = (
+				E1B000000000000000000011 /* Sources */,
+				E1B000000000000000000012 /* Frameworks */,
+				E1B000000000000000000013 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E1B000000000000000000006 /* DailyMotivationWatchWidget */,
+			);
+			name = DailyMotivationWatchWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = DailyMotivationWatchWidgetExtension;
+			productReference = E1B000000000000000000004 /* DailyMotivationWatchWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -170,9 +442,18 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1620;
+				LastSwiftUpdateCheck = 2610;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
+					E1B000000000000000000001 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					E1B000000000000000000002 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					C7115BF72EE32D3C00081F62 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
 					C76C9BB12D7D83CC004FEF31 = {
 						CreatedOnToolsVersion = 16.2;
 					};
@@ -195,6 +476,11 @@
 			);
 			mainGroup = C76C9BA92D7D83CC004FEF31;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D1A000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				D1A000000000000000000002 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				D1A000000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C76C9BB32D7D83CC004FEF31 /* Products */;
 			projectDirPath = "";
@@ -203,11 +489,21 @@
 				C76C9BB12D7D83CC004FEF31 /* DailyMotivation */,
 				C76C9BC12D7D83CE004FEF31 /* DailyMotivationTests */,
 				C76C9BCB2D7D83CE004FEF31 /* DailyMotivationUITests */,
+				C7115BF72EE32D3C00081F62 /* DailyMotivationWidgetExtension */,
+				E1B000000000000000000001 /* DailyMotivationWatch */,
+				E1B000000000000000000002 /* DailyMotivationWatchWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		C7115BF62EE32D3C00081F62 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C76C9BB02D7D83CC004FEF31 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -229,9 +525,57 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E1B000000000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1B000000000000000000013 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		D1A000000000000000000031 /* Upload Crashlytics Symbols */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Check Ad IDs + Upload Crashlytics Symbols";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Uploads dSYMs for Crashlytics; skipped until GoogleService-Info.plist is added.\nif [ \"${CONFIGURATION}\" != \"Release\" ]; then exit 0; fi\ncase \"${GAD_APPLICATION_ID}${DM_BANNER_AD_UNIT_ID}${DM_INTERSTITIAL_AD_UNIT_ID}\" in\n  *REPLACE_WITH*|*3940256099942544*) echo \"error: Set the real AdMob app and ad unit IDs (GAD_APPLICATION_ID, DM_BANNER_AD_UNIT_ID, DM_INTERSTITIAL_AD_UNIT_ID) for Release.\"; exit 1 ;;\nesac\nif [ ! -f \"${SRCROOT}/DailyMotivation/GoogleService-Info.plist\" ]; then\n  echo \"warning: GoogleService-Info.plist missing; skipping Crashlytics symbol upload\"\n  exit 0\nfi\n\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		C7115BF42EE32D3C00081F62 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C76C9BAE2D7D83CC004FEF31 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -253,9 +597,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E1B000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1B000000000000000000011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		C7115C0B2EE32D3E00081F62 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C7115BF72EE32D3C00081F62 /* DailyMotivationWidgetExtension */;
+			targetProxy = C7115C0A2EE32D3E00081F62 /* PBXContainerItemProxy */;
+		};
 		C76C9BC42D7D83CE004FEF31 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = C76C9BB12D7D83CC004FEF31 /* DailyMotivation */;
@@ -266,9 +629,83 @@
 			target = C76C9BB12D7D83CC004FEF31 /* DailyMotivation */;
 			targetProxy = C76C9BCD2D7D83CE004FEF31 /* PBXContainerItemProxy */;
 		};
+		E1B000000000000000000019 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1B000000000000000000001 /* DailyMotivationWatch */;
+			targetProxy = E1B000000000000000000017 /* PBXContainerItemProxy */;
+		};
+		E1B000000000000000000020 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E1B000000000000000000002 /* DailyMotivationWatchWidgetExtension */;
+			targetProxy = E1B000000000000000000018 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		C7115C0E2EE32D3E00081F62 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = 7X6A72UQS3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DailyMotivationWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DailyMotivationWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hungluong.Daily-Motivation.dev1.widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C7115C0F2EE32D3E00081F62 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = 7X6A72UQS3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DailyMotivationWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DailyMotivationWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hungluong.Daily-Motivation.widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		C76C9BD42D7D83CE004FEF31 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -327,6 +764,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -383,6 +821,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -393,23 +832,34 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_ASSET_PATHS = "\"DailyMotivation/Preview Content\"";
+				DEVELOPMENT_TEAM = 7X6A72UQS3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Daily Motivation: Quotes";
+				DM_BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/2435281174";
+				DM_INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/4411468910";
+				GAD_APPLICATION_ID = "ca-app-pub-3940256099942544~1458002511";
+				INFOPLIST_FILE = "DailyMotivation-Info.plist";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This lets us show ads that are more relevant to you. Daily Motivation works the same either way.";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hungluong.DailyMotivation;
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hungluong.Daily-Motivation.dev1";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -421,23 +871,34 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_ASSET_PATHS = "\"DailyMotivation/Preview Content\"";
+				DEVELOPMENT_TEAM = 7X6A72UQS3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Daily Motivation: Quotes";
+				DM_BANNER_AD_UNIT_ID = "ca-app-pub-8855786898543374/6552099859";
+				DM_INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-8855786898543374/7066446032";
+				GAD_APPLICATION_ID = "ca-app-pub-8855786898543374~7822703514";
+				INFOPLIST_FILE = "DailyMotivation-Info.plist";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "This lets us show ads that are more relevant to you. Daily Motivation works the same either way.";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.hungluong.DailyMotivation;
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hungluong.Daily-Motivation";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -512,9 +973,132 @@
 			};
 			name = Release;
 		};
+		E1B000000000000000000027 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = 7X6A72UQS3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Daily Motivation";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "com.hungluong.Daily-Motivation.dev1";
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hungluong.Daily-Motivation.dev1.watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		E1B000000000000000000028 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = 7X6A72UQS3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Daily Motivation";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "com.hungluong.Daily-Motivation";
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hungluong.Daily-Motivation.watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		E1B000000000000000000029 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = 7X6A72UQS3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DailyMotivationWatchWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Daily Motivation";
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hungluong.Daily-Motivation.dev1.watchkitapp.widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		E1B000000000000000000030 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = 7X6A72UQS3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DailyMotivationWatchWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Daily Motivation";
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hungluong.Daily-Motivation.watchkitapp.widget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		C7115C112EE32D3E00081F62 /* Build configuration list for PBXNativeTarget "DailyMotivationWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7115C0E2EE32D3E00081F62 /* Debug */,
+				C7115C0F2EE32D3E00081F62 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C76C9BAD2D7D83CC004FEF31 /* Build configuration list for PBXProject "DailyMotivation" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -551,7 +1135,80 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		E1B000000000000000000025 /* Build configuration list for PBXNativeTarget "DailyMotivationWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1B000000000000000000027 /* Debug */,
+				E1B000000000000000000028 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E1B000000000000000000026 /* Build configuration list for PBXNativeTarget "DailyMotivationWatchWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E1B000000000000000000029 /* Debug */,
+				E1B000000000000000000030 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D1A000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.19.2;
+			};
+		};
+		D1A000000000000000000002 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.11.0;
+			};
+		};
+		D1A000000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-user-messaging-platform";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D1A000000000000000000011 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		D1A000000000000000000012 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		D1A000000000000000000013 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
+		};
+		D1A000000000000000000014 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000002 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+		D1A000000000000000000015 /* GoogleUserMessagingPlatform */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1A000000000000000000003 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */;
+			productName = GoogleUserMessagingPlatform;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C76C9BAA2D7D83CC004FEF31 /* Project object */;
 }
